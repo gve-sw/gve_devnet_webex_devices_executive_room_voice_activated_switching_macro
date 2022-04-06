@@ -1,0 +1,76 @@
+<Extensions>
+  <Version>1.8</Version>
+  <Panel>
+    <Order>1</Order>
+    <PanelId>panel_manual_override</PanelId>
+    <Origin>local</Origin>
+    <Type>Statusbar</Type>
+    <Icon>Camera</Icon>
+    <Color>#07C1E4</Color>
+    <Name>Camera Control</Name>
+    <ActivityType>Custom</ActivityType>
+    <Page>
+      <Name>Camera Control</Name>
+      <Row>
+        <Name/>
+        <Widget>
+          <WidgetId>widget_9</WidgetId>
+          <Name>Select manual or automatic control of Quad Cameras</Name>
+          <Type>Text</Type>
+          <Options>size=4;fontSize=normal;align=center</Options>
+        </Widget>
+      </Row>
+      <Row>
+        <Name/>
+        <Widget>
+          <WidgetId>widget_8</WidgetId>
+          <Name>Manual</Name>
+          <Type>Text</Type>
+          <Options>size=1;fontSize=normal;align=center</Options>
+        </Widget>
+        <Widget>
+          <WidgetId>widget_override</WidgetId>
+          <Type>ToggleButton</Type>
+          <Options>size=1</Options>
+        </Widget>
+        <Widget>
+          <WidgetId>widget_6</WidgetId>
+          <Name>Automatic</Name>
+          <Type>Text</Type>
+          <Options>size=2;fontSize=normal;align=center</Options>
+        </Widget>
+      </Row>
+      <Row>
+        <Name/>
+        <Widget>
+          <WidgetId>widget_10</WidgetId>
+          <Name>For testing while not in call, turn on fullscreen Selfview</Name>
+          <Type>Text</Type>
+          <Options>size=4;fontSize=normal;align=center</Options>
+        </Widget>
+      </Row>
+      <Row>
+        <Name/>
+        <Widget>
+          <WidgetId>widget_14</WidgetId>
+          <Name>Off</Name>
+          <Type>Text</Type>
+          <Options>size=1;fontSize=normal;align=center</Options>
+        </Widget>
+        <Widget>
+          <WidgetId>widget_FS_selfview</WidgetId>
+          <Type>ToggleButton</Type>
+          <Options>size=1</Options>
+        </Widget>
+        <Widget>
+          <WidgetId>widget_12</WidgetId>
+          <Name>Selfview</Name>
+          <Type>Text</Type>
+          <Options>size=2;fontSize=normal;align=center</Options>
+        </Widget>
+      </Row>
+      <PageId>panel_manual_override</PageId>
+      <Options/>
+    </Page>
+  </Panel>
+</Extensions>
