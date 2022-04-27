@@ -192,4 +192,12 @@ function handleAutomaticMode() {
   xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
 }
 
+xapi.Status.Cameras.SpeakerTrack.Availability
+    .on((value) => {
+        console.log("Event received for SpeakerTrack Availability: ",value)
+        if (value=="Available"){
+         init()
+        }
+    });
+
 init();

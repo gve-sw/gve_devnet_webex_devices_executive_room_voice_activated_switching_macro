@@ -67,7 +67,7 @@ const  SP=0, V1=1, V2=2
 
 const Z0= {'primary': 0, 'secondary': 0} //DO NOT DELETE OR COMMENT ME!!!!!
 const Z1= {'primary': 11, 'secondary': 12} // These are ok to change
-const Z2= {'primary': 14, 'secondary': 13}
+const Z2= {'primary': 14, 'secondary': 13} // These are ok to change
 // Add camera zones below if needed to map in MAP_CAMERA_SOURCES, up to to Z8 but they can reference
 // preset IDs 11-35 depending on which are configured on the codec. PresetID 30 IS RESERVED FOR USE BY THE PROGRAM
 //Z3= {'primary': 5,'secondary': 6}
@@ -120,7 +120,6 @@ xapi.Config.UserInterface.Features.Call.MidCallControls.set("Hidden");
 + SECTION 4 - SECTION 4 - SECTION 4 - SECTION 4 - SECTION 4 - SECTION 4 +
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 */
-
 
 // overviewShowDouble defines what is shown on the far end (the video the main codec sends into the call or conference) when in "OVERVIEW" mode where nobody is speaking or there is no
 // prominent speaker detected by any of the microphones
@@ -217,6 +216,12 @@ async function validate_mappings() {
 }
 
 validate_mappings();
+
+// below we check for the existence of a SpeakerTrack camera configured for the codec
+// so we can safely issue SpeakerTrack related commands
+let has_SpeakerTrack= MAP_CAMERA_SOURCES.indexOf(SP) != -1 ||
+                        MAP_CAMERA_SOURCES.indexOf(V1) != -1;
+
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // VARIABLES
@@ -386,7 +391,7 @@ function startAutomation() {
 
     // Always turn on SpeakerTrack when the Automation is started. It is also turned on when a call connects so that
     // if it is manually turned off while outside of a call it goes back to the correct state
-   xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
+   if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
 
    //registering vuMeter event handler
    micHandler=xapi.event.on('Audio Input Connectors Microphone', (event) => {
@@ -498,7 +503,8 @@ async function makeCameraSwitch(input, average) {
   // we want to use for switching camera input
   var selectedSource=MAP_CAMERA_SOURCES[MICROPHONE_CONNECTORS.indexOf(input)]
 
-
+// We do not need to check for  has_SpeakerTrack below because we are implicitly
+// checking for that by evaluating typeof selectedSource
   if (typeof selectedSource == 'number') {
     if (selectedSource==SP) {
         // if the active camera is a SpeakerTrack camera, just activate it, no need to set main video source to it
@@ -585,7 +591,7 @@ function setMainVideoSource(thePresetVideoSource) {
     // the Video Input SetMainVideoSource does not work while Speakertrack is active
     // so we need to turn it off in case the previous video input was from a source where
     // SpeakerTrack is used.
-    xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
+    if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
 
     let sourceDict={ SourceID : '0'}
     sourceDict["SourceID"]=thePresetVideoSource.toString();
@@ -628,7 +634,7 @@ async function recallSideBySideMode() {
         connectorDict["ConnectorId"]=OVERVIEW_DOUBLE_SOURCE_IDS;
         console.log("Trying to use this for connector dict in recallSideBySideMode(): ", connectorDict  )
         xapi.command('Video Input SetMainVideoSource', connectorDict).catch(handleError);
-        xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
+        if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
         xapi.command('Camera Preset Activate', { PresetId: 30 }).catch(handleError);
     }
     else {
@@ -638,12 +644,12 @@ async function recallSideBySideMode() {
             sourceDict["SourceID"]=OVERVIEW_SINGLE_SOURCE_ID.toString();
             console.log("Trying to use this for source dict in recallSideBySideMode(): ", sourceDict  )
             xapi.command('Video Input SetMainVideoSource', sourceDict).catch(handleError);
-            xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
+            if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
         }
         else {
                 // If OVERVIEW_PRESET_ZONE is defined as something other than Z0, switch to that
                 console.log('Recall side by side mode switching to preset OVERVIEW_PRESET_ZONE...');
-                xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
+                if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
                 switchToVideoZone(OVERVIEW_PRESET_ZONE);
         }
     }
@@ -768,7 +774,7 @@ function handleMicMuteOn() {
 function handleMicMuteOff() {
   console.log('handleMicMuteOff');
   // need to turn back on SpeakerTrack that might have been turned off when going on mute
-  xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
+  if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
 }
 
 // ---------------------- MACROS
@@ -857,7 +863,7 @@ function startInitialCallTimer() {
 function onInitialCallTimerExpired() {
   console.log('onInitialCallTimerExpired');
   allowCameraSwitching = true;
-  xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
+  if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
 
 }
 
@@ -887,5 +893,17 @@ function onNewSpeakerTimerExpired() {
 /////////////////////////////////////////////////////////////////////////////////////////
 // INVOCATION OF INIT() TO START THE MACRO
 /////////////////////////////////////////////////////////////////////////////////////////
+
+// if the Speakertrack Camera becomes available after FW upgrade, we must re-init so
+// we register that action as an event handler
+xapi.Status.Cameras.SpeakerTrack.Availability
+    .on((value) => {
+        console.log("Event received for SpeakerTrack Availability: ",value)
+        if (value=="Available"){
+         stopAutomation();
+         init();
+        }
+    });
+
 
 init();
