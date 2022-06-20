@@ -728,7 +728,7 @@ function sendIntercodecMessage(codec, message) {
       'Authorization: Basic ' + codec.auth
     ];
 
-    let payload = "<XmlDoc internal='True'><Command><Message><Send><Text>"+ message +"</Text></Send></Message></Command></XmlDoc>";
+    let payload = "<Command><Message><Send><Text>"+ message +"</Text></Send></Message></Command>";
     let errMessage1="Error connecting to codec for second camera, please contact the Administrator";
     let errMessage2="Codec for second camera is offline, please contact the Administrator";
     xapi.command('HttpClient Post', {Url: url, Header: headers, AllowInsecureHTTPS: 'True'}, payload)
