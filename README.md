@@ -39,7 +39,7 @@ If you only have one Webex Codec and will not be trying to use 2 QuadCams,  you 
 that codec to control any allowed combination 4K PTZ cameras, a Cisco SpeakerTrack 60 camera array or a QuadCam camera.  
   
 You can find technical drawings and connection diagrams for the most common scenarios supported by this macro here:
-[Boardroom_2_0_System_Drawing_REV_2.pdf](Boardroom_2_0_System_Drawing_REV_2.pdf)
+[Boardroom_2_0_System_Drawing_REV_3.pdf](Boardroom_2_0_System_Drawing_REV_3.pdf)
 
 Notice that for the dual codec scenario, the camera input 2 on the Primary (Main) Codec comes from 
 Output 1 on the Auxiliary codec since we are just using that codec to pass along the video from the QuadCam. 
