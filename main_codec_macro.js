@@ -16,6 +16,7 @@ or implied.
 /////////////////////////////////////////////////////////////////////////////////////////
 
 const xapi = require('xapi');
+import { GMM } from './GMM_Lib'
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // INSTALLER SETTINGS
@@ -178,6 +179,8 @@ const MICROPHONEHIGH = 25;
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 */
 
+const localCallout = new GMM.Connect.Local(module.name.replace('./', ''))
+
 
 /////////////////////
 // MAPPING VALIDATION
@@ -244,6 +247,8 @@ let lastActivePTZCameraZoneObj=Z0;
 let lastActivePTZCameraZoneCamera='0';
 
 let micHandler= () => void 0;
+
+let usb_mode=false;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // UTILITIES
@@ -395,6 +400,8 @@ function startAutomation() {
 
    //registering vuMeter event handler
    micHandler=xapi.event.on('Audio Input Connectors Microphone', (event) => {
+    //adding protection for mis-configured mics
+    if (typeof micArrays[event.id[0]]!='undefined') { 
         micArrays[event.id[0]].pop();
         micArrays[event.id[0]].push(event.VuMeter);
 
@@ -405,6 +412,7 @@ function startAutomation() {
             // invoke main logic to check mic levels ans switch to correct camera input
             checkMicLevelsToSwitchCamera();
         }
+      }
     });
   // start VuMeter monitoring
   console.log("Turning on VuMeter monitoring...")
@@ -636,6 +644,13 @@ async function recallSideBySideMode() {
         xapi.command('Video Input SetMainVideoSource', connectorDict).catch(handleError);
         if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
         xapi.command('Camera Preset Activate', { PresetId: 30 }).catch(handleError);
+
+        const payload = { EditMatrixOutput: { sources: connectorDict["ConnectorId"] } };
+
+        setTimeout(function(){
+          //Let USB Macro know we are composing
+          localCallout.command(payload).post()
+        }, 250) //250ms delay to allow the main source to resolve first
     }
     else {
         // Check for OVERVIEW_PRESET_ZONE. If set to default Z0, just SetMainVideoSource
@@ -713,9 +728,75 @@ function handleError(error) {
   console.log(error);
 }
 
+
+/////////////////////////////////////////////////////////////////////////////////////////
+// INTER-MACRO MESSAGE HANDLING
+/////////////////////////////////////////////////////////////////////////////////////////
+
+async function updateUSBModeConfig() {
+  var object = { AlterUSBConfig: { config: 'matrix_Camera_Mode', value: true } } 
+  await localCallout.command(object).post() 
+}
+
+
+GMM.Event.Receiver.on(event => {
+  const usb_mode_reg = /USB_Mode_Version_[0-9]*.*/gm
+  if (event.Source.Id=='localhost') {
+          // we are evaluating a local event, first check to see if from the USB Mode macro
+          if (usb_mode_reg.test(event.App)) {
+            if (event.Type == 'Error') {
+              console.error(event)
+            } else {
+                switch (event.Value) {
+                  case 'Initialized':
+                    console.warn(`USB mode initialized...`)
+                    updateUSBModeConfig();
+                    break;
+                  case 'EnteringWebexMode':
+                    console.warn(`You are entering Webex Mode`)
+                    //Run code here when Default Mode starts to configure
+                    break;
+                  case 'WebexModeStarted':
+                    console.warn(`System is in Default Mode`)
+                    stopAutomation();
+                    usb_mode= false;
+                    // always tell the other codec when your are in or out of a call
+                    //otherCodec.status('CALL_DISCONNECTED').post();
+
+                    break;
+                  case 'enteringUSBMode':
+                    console.warn(`You are entering USB Mode`)
+                    //Run code here when USB Mode starts to configure
+                    break;
+                  case 'USBModeStarted':
+                    console.warn(`System is in Default Mode`)
+                    startAutomation();
+                    usb_mode= true;
+                    // always tell the other codec when your are in or out of a call
+                    //otherCodec.status('CALL_CONNECTED').post();
+
+                    break;
+                  default:
+                    break;
+                }
+            }
+          }
+          else {
+            console.debug({
+              Message: `Received Message from ${event.App} and was not processed`
+            })
+          }
+        }
+
+
+      })
+
+
 /////////////////////////////////////////////////////////////////////////////////////////
 // INTER-CODEC COMMUNICATION
 /////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 function sendIntercodecMessage(codec, message) {
   if (codec.enable) {
@@ -778,6 +859,7 @@ function handleMicMuteOff() {
 }
 
 // ---------------------- MACROS
+
 
 function handleMessage(event) {
   switch(event.Text) {

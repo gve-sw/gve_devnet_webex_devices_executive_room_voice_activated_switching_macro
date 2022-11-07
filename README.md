@@ -11,6 +11,11 @@ It features the following enhancements:
 - Support for SpeakerTrack 60 Camera arrays
 - Support for using with only one main codec
 - Support for re-initializing the macro after a camera firmware update
+
+11/7/22 Updates:
+
+- Support for USB Mode V3 Beta macro  
+- Protection against crashed due to non-monitored vuMeters being manually turned on 
  
 
 ## Contacts
@@ -36,8 +41,15 @@ In that scenario, the first QuadCam is connected to the main
 codec (typically a Webex Codec Pro) and the second one to the auxiliary codec (typically a Webex Codec Plus) which in turn has it's HDMI 1 
 video output connected to the main codec into it's HDMI 2 input. 
 If you only have one Webex Codec and will not be trying to use 2 QuadCams,  you can just use one of the macros ('main_codec_macro.js') on 
-that codec to control any allowed combination 4K PTZ cameras, a Cisco SpeakerTrack 60 camera array or a QuadCam camera.  
-  
+that codec to control any allowed combination 4K PTZ cameras, a Cisco SpeakerTrack 60 camera array or a QuadCam camera.   
+
+This sample also includes the GMM_Lib macro that is needed for compatibility with the USB Mode V3 Beta macro. Version 3.0.6 of that macro is also included 
+but if you have a newer version you can use that one instead. More details on the USB Mode V3 macro can be found here: 
+
+NOTE: Even if you do not plan on installing and using the USB Mode V3 macro, you do need to install the GMM_Lib macro on the main codec. To 
+do so, just create a new macro called "GMM_Lib" and copy the contents of the GMM_Lib.js file in this repository to it. Save it but do not turn 
+it on; it is just a library that the main_codec_macro loads.  
+
 You can find technical drawings and connection diagrams for the most common scenarios supported by this macro here:
 [Boardroom_2_0_System_Drawing_REV_3.pdf](Boardroom_2_0_System_Drawing_REV_3.pdf)
 
