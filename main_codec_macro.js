@@ -173,6 +173,9 @@ const AUX_CODEC_AUTH=encode(AUX_CODEC_USERNAME+':'+AUX_CODEC_PASSWORD); // DO NO
 const MICROPHONELOW  = 6;
 const MICROPHONEHIGH = 25;
 
+const minOS10Version='10.17.1.0';
+const minOS11Version='11.0.0.4';
+
 /*
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 + DO NOT EDIT ANYTHING BELOW THIS LINE                                  +
@@ -249,6 +252,10 @@ let lastActivePTZCameraZoneCamera='0';
 let micHandler= () => void 0;
 
 let usb_mode=false;
+let webrtc_mode=false;
+
+let isOSTen=false;
+let isOSEleven=false;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // UTILITIES
@@ -272,6 +279,24 @@ async function getPresetCamera(prID) {
   const value =  await xapi.Command.Camera.Preset.Show({ PresetId: prID });
   return(value.CameraId)
 }
+
+async function check4_Minimum_Version_Required(minimumOs) {
+  const reg = /^\D*(?<MAJOR>\d*)\.(?<MINOR>\d*)\.(?<EXTRAVERSION>\d*)\.(?<BUILDID>\d*).*$/i;
+  const minOs = minimumOs; 
+  const os = await xapi.Status.SystemUnit.Software.Version.get();
+  console.log(os)
+  const x = (reg.exec(os)).groups; 
+  const y = (reg.exec(minOs)).groups;
+  if (parseInt(x.MAJOR) > parseInt(y.MAJOR)) return true; 
+  if (parseInt(x.MAJOR) < parseInt(y.MAJOR)) return false; 
+  if (parseInt(x.MINOR) > parseInt(y.MINOR)) return true; 
+  if (parseInt(x.MINOR) < parseInt(y.MINOR)) return false; 
+  if (parseInt(x.EXTRAVERSION) > parseInt(y.EXTRAVERSION)) return true; 
+  if (parseInt(x.EXTRAVERSION) < parseInt(y.EXTRAVERSION)) return false; 
+  if (parseInt(x.BUILDID) > parseInt(y.BUILDID)) return true; 
+  if (parseInt(x.BUILDID) < parseInt(y.BUILDID)) return false; 
+  return false;
+} 
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // INITIALIZATION
@@ -313,7 +338,7 @@ function evalSelfView(value) {
 	}
 }
 
-function init() {
+async function init() {
   console.log('init');
   // configure HTTP settings
   xapi.config.set('HttpClient Mode', 'On').catch(handleError);
@@ -363,8 +388,38 @@ function init() {
     xapi.Event.CallDisconnect.on(async () => {
         console.log("Turning off Self View....");
         xapi.Command.Video.Selfview.Set({ Mode: 'off'});
+        webrtc_mode=false; // ending webrtc calls is being notified here now in RoomOS11
         stopAutomation();
     });
+
+    // check RoomOS versions
+
+    isOSTen=await check4_Minimum_Version_Required(minOS10Version);
+    isOSEleven=await check4_Minimum_Version_Required(minOS11Version);
+
+    // register WebRTC Mode if RoomOS 11
+    if (isOSEleven) {
+        xapi.Status.UserInterface.WebView.Type
+        .on(async(value) => {
+          if (value==='WebRTCMeeting') {
+            webrtc_mode=true;
+
+            console.log("Starting automation due to WebRTCMeeting event...");
+            startAutomation();
+            startInitialCallTimer();
+
+          } else {
+            webrtc_mode=false;
+            if (!usb_mode) {
+                console.log("Turning off Self View....");
+                xapi.Command.Video.Selfview.Set({ Mode: 'off'});
+                console.log("Stopping automation due to a non-WebRTCMeeting  event...");
+                stopAutomation();
+              }
+
+          }
+        });
+    }
 
     //  set self-view toggle on custom panel depending on Codec status that might have been set manually
     xapi.Status.Video.Selfview.Mode.get().then(evalSelfView);
@@ -637,7 +692,7 @@ async function recallSideBySideMode() {
   // a switch
   lastActivePTZCameraZoneObj=Z0;
   lastActivePTZCameraZoneCamera='0';
-  if (overviewShowDouble) {
+  if (overviewShowDouble && !webrtc_mode) { //WebRTC mode does not support composing yet even in RoomOS11
         let connectorDict={ ConnectorId : [0,0]};
         connectorDict["ConnectorId"]=OVERVIEW_DOUBLE_SOURCE_IDS;
         console.log("Trying to use this for connector dict in recallSideBySideMode(): ", connectorDict  )

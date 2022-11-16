@@ -17,6 +17,10 @@ It features the following enhancements:
 - Support for USB Mode V3 Beta macro  
 - Protection against crashed due to non-monitored vuMeters being manually turned on 
  
+ 11/16/22 Updates:
+
+ - Support for RoomOS11 Beta
+ - Support for WebRTC Calls with RoomOS11 Beta. Side-by-side compositions not used in WebRTC mode since not yet supported
 
 ## Contacts
 * Gerardo Chaves (gchaves@cisco.com)
@@ -29,6 +33,7 @@ It features the following enhancements:
 
 ## Requirements
 * Devices must be running RoomOS 10.8 or later
+* If running RoomOS 11, must be 11.0.0.4 or later
 
 ## Installation/Configuration
 This sample includes 2 macros that can be installed on separate Webex Codecs to work in conjunction to cover a large executive 
@@ -43,8 +48,8 @@ video output connected to the main codec into it's HDMI 2 input.
 If you only have one Webex Codec and will not be trying to use 2 QuadCams,  you can just use one of the macros ('main_codec_macro.js') on 
 that codec to control any allowed combination 4K PTZ cameras, a Cisco SpeakerTrack 60 camera array or a QuadCam camera.   
 
-This sample also includes the GMM_Lib macro that is needed for compatibility with the USB Mode V3 Beta macro. Version 3.0.6 of that macro is also included 
-but if you have a newer version you can use that one instead. More details on the USB Mode V3 macro can be found here: 
+This sample also includes the GMM_Lib macro that is needed for compatibility with the USB Mode V3 Beta macro. Version 3.0.6 of that macro is also included but if you have a newer version you can use that one instead.  
+NOTE: You cannot change the name of the USB Mode v3 macro or else the code in `main_codec_macro.js` will not be able to communicate with it. The name of that macro as stored in your codec must start with "USB_Mode_Version_3" but can have other characters after that. 
 
 NOTE: Even if you do not plan on installing and using the USB Mode V3 macro, you do need to install the GMM_Lib macro on the main codec. To 
 do so, just create a new macro called "GMM_Lib" and copy the contents of the GMM_Lib.js file in this repository to it. Save it but do not turn 
@@ -60,7 +65,10 @@ there is the one making all of the decisions on which camara to activate dependi
 
 After the codecs, cameras and microphones are correctly connected do the following:
 1) Edit your local version of files 'main_codec_macro.js' and 'aux_codec_macro.js' according to these instructions to configure the macros:  
-[MainMacroInstructions.pdf](MainMacroInstructions.pdf)
+[MainMacroInstructions.pdf](MainMacroInstructions.pdf) .  
+
+NOTE: If using WebRTC calls, do not configure microphone 1 since, as of RoomOS version 11.0.0.4 , we do not get VuMeter events for microphone 1 when in WebRTC calls. Also, image composing is not supported yet in WebRTC mode so even if you set `overviewShowDouble` to `true` , the macro will use whatever you set in `OVERVIEW_PRESET_ZONE` or `OVERVIEW_SINGLE_SOURCE_ID` while in a WebRTC call but will revert to side by side views if so configured for regular SIP and webex calls. 
+
 
 
 2) Load the modified contents of 'main_codec_macro.js' as a new macro into the Macro editor of the main codec and the contents of the modified 'aux_codec_macro.js' 

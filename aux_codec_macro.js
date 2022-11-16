@@ -115,7 +115,7 @@ function sendIntercodecMessage(message) {
     'Authorization: Basic ' + main_codec.auth
   ];
 
-  let payload = "<Command><Message><Send><Text>"+ message +"</Text></Send></Message></Command>";
+  let payload = "<Command><Message><Send><Text>"+ JSON.stringify(message) +"</Text></Send></Message></Command>";
  
   xapi.command('HttpClient Post', {Url: url, Header: headers, AllowInsecureHTTPS: 'True'}, payload)
     .then((response) => {if(response.StatusCode === "200") {console.log("Successfully sent: " + payload)}});
