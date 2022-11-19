@@ -796,6 +796,7 @@ async function updateUSBModeConfig() {
 
 GMM.Event.Receiver.on(event => {
   const usb_mode_reg = /USB_Mode_Version_[0-9]*.*/gm
+  if ((typeof event)!='string')
   if (event.Source.Id=='localhost') {
           // we are evaluating a local event, first check to see if from the USB Mode macro
           if (usb_mode_reg.test(event.App)) {
