@@ -22,6 +22,11 @@ It features the following enhancements:
  - Support for RoomOS11 Beta
  - Support for WebRTC Calls with RoomOS11 Beta. Side-by-side compositions not used in WebRTC mode since not yet supported
 
+ 11/24/22 Updates:
+ - improved codec to codec communication to reduce instances of insufficient http connections errors 
+ - re-introduced starting calls in side by side mode until initialCallTimer expires.  
+ - cleared out all call timers upon stopping automation to prevent problems with WebRTC switching when joining new calls too quickly after ending previous.  
+
 ## Contacts
 * Gerardo Chaves (gchaves@cisco.com)
 * Enrico Conedera (econeder@cisco.com)

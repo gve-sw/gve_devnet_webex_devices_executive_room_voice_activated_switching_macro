@@ -13,7 +13,7 @@ IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 or implied.
 */
 
-const xapi = require('xapi');
+import xapi from 'xapi';
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // INSTALLER SETTINGS
@@ -105,34 +105,34 @@ function handleError(error) {
 
 // ---------------------- INTER-CODEC COMMUNICATION
 
-function sendIntercodecMessage(message) {
-  console.log(`sendIntercodecMessage: message = ${message}`);
 
-  let url = 'https://' + main_codec.url + '/putxml';
-  
-  let headers = [
-    'Content-Type: text/xml',
-    'Authorization: Basic ' + main_codec.auth
-  ];
 
-  let payload = "<Command><Message><Send><Text>"+ JSON.stringify(message) +"</Text></Send></Message></Command>";
- 
-  xapi.command('HttpClient Post', {Url: url, Header: headers, AllowInsecureHTTPS: 'True'}, payload)
-    .then((response) => {if(response.StatusCode === "200") {console.log("Successfully sent: " + payload)}});
-}
+async function sendIntercodecMessage(message) {
 
-/* This is the end of the startup script section.  At this point the aux_codec should be ready to receive messages
-from the main_codec.
-THRERE ARE FIVE MESSAGES:
-1. wake_up
-2. VTC-1_status which is sent at the same time as wake-up, and is intended to check the health of the Aux Codec Plus.
-3. shut_down
-4. side-by-side 
-	This is the default mode that is used when the mute button is pressed, after the "side by side timer" expires, and also
-	at the beginning of any call.
-5. automatic_mode
-	This is the automatic camera switching function. 
-*/
+    console.log(`sendIntercodecMessage: codec = ${main_codec.url} | message = ${message}`);
+
+    const parameters = {
+      Url: `https://${main_codec.url}/putxml`,
+      Header: ['Content-Type: text/xml', 'Authorization: Basic ' + main_codec.auth],
+      AllowInsecureHTTPS: 'True'
+    }
+
+    const body = `<Command><Message><Send><Text>${JSON.stringify(message)}</Text></Send></Message></Command>`;
+
+    try {
+      const request = await xapi.Command.HTTPClient.Post(parameters, body);
+      console.log({ Message: `Success`, Payload: body, StatusCode: request.StatusCode, Status: request.status })
+    } catch (e) {
+      if ('data' in e) {
+        console.error({ Error: e.message, StatusCode: e.data.StatusCode, Status: e.data.status })
+      } else {
+        console.error({ Error: e.message })
+      }
+
+      alertFailedIntercodecComm(`Error connecting to codec for second camera, please contact the Administrator`)
+    }
+} 
+
 
 // ---------------------- MACROS
 
@@ -158,9 +158,9 @@ function handleMessage(event) {
   }
 }
 
-function handleMacroStatus() {
+async function handleMacroStatus() {
   console.log('handleMacroStatus');
-  sendIntercodecMessage('VTC-1_OK');
+  await sendIntercodecMessage('VTC-1_OK');
 }
 
 function handleWakeUp() {

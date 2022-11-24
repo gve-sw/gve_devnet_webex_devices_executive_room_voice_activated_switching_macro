@@ -15,7 +15,7 @@ or implied.
 // REQUIREMENTS
 /////////////////////////////////////////////////////////////////////////////////////////
 
-const xapi = require('xapi');
+import xapi from 'xapi';
 import { GMM } from './GMM_Lib'
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -380,7 +380,8 @@ async function init() {
     // register handler for Call Successful
     xapi.Event.CallSuccessful.on(async () => {
       console.log("Starting new call timer...");
-      startAutomation();
+      await startAutomation();
+      recallSideBySideMode();
       startInitialCallTimer();
     });
 
@@ -442,12 +443,20 @@ async function init() {
 // START/STOP AUTOMATION FUNCTIONS
 /////////////////////////////////////////////////////////////////////////////////////////
 
-function startAutomation() {
+async function startAutomation() {
   console.log('startAutomation');
    //setting overall manual mode to false
    manual_mode = false;
    allowCameraSwitching = true;
 
+   if (isOSEleven) {
+   try {
+    const webViewType = await xapi.Status.UserInterface.WebView.Type.get()
+    if (webViewType=='WebRTCMeeting') webrtc_mode=true;
+   } catch (e) {
+     console.log('Unable to read WebView Type.. assuming not in webrtc mode')
+   }
+  }
 
     // Always turn on SpeakerTrack when the Automation is started. It is also turned on when a call connects so that
     // if it is manually turned off while outside of a call it goes back to the correct state
@@ -486,6 +495,9 @@ function startAutomation() {
 function stopAutomation() {
          //setting overall manual mode to true
          manual_mode = true;
+         stopSideBySideTimer();
+         stopNewSpeakerTimer();
+         stopInitialCallTimer();
          console.log("Stopping all VuMeters...");
          xapi.Command.Audio.VuMeter.StopAll({ });
          //TODO: check to see if when we stop automation we really want to switch to connectorID 1
@@ -603,7 +615,7 @@ async function makeCameraSwitch(input, average) {
 
 
   // send required messages to auxiliary codec that also turns on speakertrack over there
-  sendIntercodecMessage(AUX_CODEC, 'automatic_mode');
+  await sendIntercodecMessage(AUX_CODEC, 'automatic_mode');
   lastActiveHighInput = input;
   restartNewSpeakerTimer();
 }
@@ -724,7 +736,7 @@ async function recallSideBySideMode() {
         }
     }
   // send required messages to other codecs
-  sendIntercodecMessage(AUX_CODEC, 'side_by_side');
+  await sendIntercodecMessage(AUX_CODEC, 'side_by_side');
   lastActiveHighInput = 0;
   lowWasRecalled = true;
 }
@@ -852,42 +864,33 @@ GMM.Event.Receiver.on(event => {
 // INTER-CODEC COMMUNICATION
 /////////////////////////////////////////////////////////////////////////////////////////
 
+async function sendIntercodecMessage(codec, message) {
 
-
-function sendIntercodecMessage(codec, message) {
   if (codec.enable) {
     console.log(`sendIntercodecMessage: codec = ${codec.url} | message = ${message}`);
 
-    let url = 'https://' + codec.url + '/putxml';
-    
-    let headers = [
-      'Content-Type: text/xml',
-      'Authorization: Basic ' + codec.auth
-    ];
+    const parameters = {
+      Url: `https://${codec.url}/putxml`,
+      Header: ['Content-Type: text/xml', 'Authorization: Basic ' + codec.auth],
+      AllowInsecureHTTPS: 'True'
+    }
 
-    let payload = "<Command><Message><Send><Text>"+ message +"</Text></Send></Message></Command>";
-    let errMessage1="Error connecting to codec for second camera, please contact the Administrator";
-    let errMessage2="Codec for second camera is offline, please contact the Administrator";
-    xapi.command('HttpClient Post', {Url: url, Header: headers, AllowInsecureHTTPS: 'True'}, payload)
-      .then((response) => {
-            if(response.StatusCode === "200") {
-                console.log("Successfully sent: " + payload)
-            }
-            else {
-                console.log("Error "+response.StatusCode+" sending message to Aux: ",response.StatusCode);
-                alertFailedIntercodecComm(errMessage1);
-            }
-        })
-      .catch((err) => {
-        if ("data" in err) {
-          console.log("Sending message failed: "+err.message+" Status code: "+err.data.StatusCode);
-        } else {
-          console.log("Sending message failed: "+err.message);
-        }
-        alertFailedIntercodecComm(errMessage2);
-      });
-  };
-}
+    const body = `<Command><Message><Send><Text>${message}</Text></Send></Message></Command>`;
+
+    try {
+      const request = await xapi.Command.HTTPClient.Post(parameters, body);
+      console.log({ Message: `Success`, Payload: body, StatusCode: request.StatusCode, Status: request.status })
+    } catch (e) {
+      if ('data' in e) {
+        console.error({ Error: e.message, StatusCode: e.data.StatusCode, Status: e.data.status })
+      } else {
+        console.error({ Error: e.message })
+      }
+
+      alertFailedIntercodecComm(`Error connecting to codec for second camera, please contact the Administrator`)
+    }
+ }
+} 
 
 function alertFailedIntercodecComm(message) {
         xapi.command("UserInterface Message Alert Display", {
@@ -926,13 +929,13 @@ function handleMessage(event) {
 }
 
 // function to check the satus of the macros running on the AUX codec
-function handleMacroStatus() {
+async function handleMacroStatus() {
   console.log('handleMacroStatus');
   if (AUX_CODEC.enable) {
       // reset tracker of responses from AUX codec
       AUX_CODEC.online = false;
       // send required messages to AUX codec
-      sendIntercodecMessage(AUX_CODEC, 'VTC-1_status');
+      await sendIntercodecMessage(AUX_CODEC, 'VTC-1_status');
   }
 }
 
@@ -943,21 +946,21 @@ function handleCodecOnline(codec) {
   }
 }
 
-function handleWakeUp() {
+async function handleWakeUp() {
   console.log('handleWakeUp');
   // stop automatic switching behavior
   stopAutomation();
   // send wakeup to AUX codec
-  sendIntercodecMessage(AUX_CODEC, 'wake_up');
+  await sendIntercodecMessage(AUX_CODEC, 'wake_up');
   // check the satus of the macros running on the AUX codec and store it in AUX_CODEC.online
   // in case we need to check it in some other function
   handleMacroStatus();
 }
 
-function handleShutDown() {
+async function handleShutDown() {
   console.log('handleShutDown');
   // send required messages to other codecs
-  sendIntercodecMessage(AUX_CODEC, 'shut_down');
+  await sendIntercodecMessage(AUX_CODEC, 'shut_down');
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -1000,9 +1003,18 @@ function startInitialCallTimer() {
 
 function onInitialCallTimerExpired() {
   console.log('onInitialCallTimerExpired');
-  allowCameraSwitching = true;
-  if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
+  InitialCallTimer=null;
+  if (!manual_mode) {
+    allowCameraSwitching = true;
+    if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
+  }
+}
 
+function stopInitialCallTimer() {
+  if (InitialCallTimer != null) {
+    clearTimeout(InitialCallTimer);
+    InitialCallTimer = null;
+  }
 }
 
 function startNewSpeakerTimer() {
