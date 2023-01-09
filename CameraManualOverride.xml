@@ -4,7 +4,7 @@
     <Order>1</Order>
     <PanelId>panel_manual_override</PanelId>
     <Origin>local</Origin>
-    <Type>Statusbar</Type>
+    <Location>HomeScreenAndCallControls</Location>
     <Icon>Camera</Icon>
     <Color>#07C1E4</Color>
     <Name>Camera Control</Name>
@@ -12,16 +12,7 @@
     <Page>
       <Name>Camera Control</Name>
       <Row>
-        <Name/>
-        <Widget>
-          <WidgetId>widget_9</WidgetId>
-          <Name>Select manual or automatic control of Quad Cameras</Name>
-          <Type>Text</Type>
-          <Options>size=4;fontSize=normal;align=center</Options>
-        </Widget>
-      </Row>
-      <Row>
-        <Name/>
+        <Name>Camera switching</Name>
         <Widget>
           <WidgetId>widget_8</WidgetId>
           <Name>Manual</Name>
@@ -35,22 +26,33 @@
         </Widget>
         <Widget>
           <WidgetId>widget_6</WidgetId>
-          <Name>Automatic</Name>
+          <Name>Auto</Name>
           <Type>Text</Type>
-          <Options>size=2;fontSize=normal;align=center</Options>
+          <Options>size=null;fontSize=normal;align=center</Options>
         </Widget>
       </Row>
       <Row>
-        <Name/>
+        <Name>Side by side mode</Name>
         <Widget>
-          <WidgetId>widget_10</WidgetId>
-          <Name>For testing while not in call, turn on fullscreen Selfview</Name>
+          <WidgetId>widget_sbs_a</WidgetId>
+          <Name>Overview</Name>
           <Type>Text</Type>
-          <Options>size=4;fontSize=normal;align=center</Options>
+          <Options>size=2;fontSize=normal;align=right</Options>
+        </Widget>
+        <Widget>
+          <WidgetId>widget_sbs_control</WidgetId>
+          <Type>ToggleButton</Type>
+          <Options>size=1</Options>
+        </Widget>
+        <Widget>
+          <WidgetId>widget_sbs_b</WidgetId>
+          <Name>Always</Name>
+          <Type>Text</Type>
+          <Options>size=null;fontSize=normal;align=center</Options>
         </Widget>
       </Row>
       <Row>
-        <Name/>
+        <Name>Test FullScreen Selfview</Name>
         <Widget>
           <WidgetId>widget_14</WidgetId>
           <Name>Off</Name>
@@ -64,9 +66,9 @@
         </Widget>
         <Widget>
           <WidgetId>widget_12</WidgetId>
-          <Name>Selfview</Name>
+          <Name>On</Name>
           <Type>Text</Type>
-          <Options>size=2;fontSize=normal;align=center</Options>
+          <Options>size=null;fontSize=normal;align=center</Options>
         </Widget>
       </Row>
       <PageId>panel_manual_override</PageId>

@@ -249,6 +249,8 @@ let manual_mode = true;
 let lastActivePTZCameraZoneObj=Z0;
 let lastActivePTZCameraZoneCamera='0';
 
+let perma_sbs=false; // set to true if you want to start with side by side view always
+
 let micHandler= () => void 0;
 
 let usb_mode=false;
@@ -436,6 +438,11 @@ async function init() {
     // next, set Automatic mode toggle switch on custom panel off since the macro starts that way
     xapi.command('UserInterface Extensions Widget SetValue', {WidgetId: 'widget_override', Value: 'off'});
 
+    // next, set side by side mode panel to whatever is configured initially
+    xapi.command('UserInterface Extensions Widget SetValue', {WidgetId: 'widget_sbs_control', Value: (perma_sbs) ? 'on' : 'off'});
+
+    
+
 }
 
 
@@ -578,6 +585,7 @@ async function makeCameraSwitch(input, average) {
   // we want to use for switching camera input
   var selectedSource=MAP_CAMERA_SOURCES[MICROPHONE_CONNECTORS.indexOf(input)]
 
+  if (!perma_sbs) {
 // We do not need to check for  has_SpeakerTrack below because we are implicitly
 // checking for that by evaluating typeof selectedSource
   if (typeof selectedSource == 'number') {
@@ -612,10 +620,15 @@ async function makeCameraSwitch(input, average) {
    else if (typeof selectedSource == 'object') {
         switchToVideoZone(selectedSource);
    }
-
-
   // send required messages to auxiliary codec that also turns on speakertrack over there
   await sendIntercodecMessage(AUX_CODEC, 'automatic_mode');
+
+  } else {
+    // if "permanent" side by side is selected, just switch to that
+    console.log("Permanent side by side active when inside makeCameraSwitch()...")
+    permaSideBySideMode(selectedSource);
+
+  }
   lastActiveHighInput = input;
   restartNewSpeakerTimer();
 }
@@ -742,6 +755,38 @@ async function recallSideBySideMode() {
 }
 
 
+async function permaSideBySideMode(selectedSource) {
+
+  if (overviewShowDouble && !webrtc_mode) { //WebRTC mode does not support composing yet even in RoomOS11
+        let connectorDict={ ConnectorId : [0,0]};
+        connectorDict["ConnectorId"]=OVERVIEW_DOUBLE_SOURCE_IDS;
+        console.log("Trying to use this for connector dict in permaSideBySideMode(): ", connectorDict  )
+        xapi.command('Video Input SetMainVideoSource', connectorDict).catch(handleError);
+
+        if (MAIN_CODEC_QUADCAM_SOURCE_ID==selectedSource) {
+          await sendIntercodecMessage(AUX_CODEC, 'side_by_side');
+          if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
+        } else {
+          await sendIntercodecMessage(AUX_CODEC, 'automatic_mode');
+          if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
+          xapi.command('Camera Preset Activate', { PresetId: 30 }).catch(handleError);        
+        }
+
+        const payload = { EditMatrixOutput: { sources: connectorDict["ConnectorId"] } };
+
+        setTimeout(function(){
+          //Let USB Macro know we are composing
+          localCallout.command(payload).post()
+        }, 250) //250ms delay to allow the main source to resolve first
+    }
+    else {
+        console.log('Cannot set permanent side by side mode without overviewShowDouble set to true or in WebRTC mode... ');
+        perma_sbs=false;
+        xapi.command('UserInterface Extensions Widget SetValue', {WidgetId: 'widget_sbs_control', Value: (perma_sbs) ? 'on' : 'off'});
+    }
+
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////
 // TOUCH 10 UI FUNCTION HANDLERS
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -765,8 +810,24 @@ function handleOverrideWidget(event)
                   console.log("Starting automation...")
                   startAutomation();
                }
-         }
 
+         }
+         
+         if (event.WidgetId === 'widget_sbs_control')
+         {
+            console.log("Side by side control selected.....")
+            if (event.Value === 'off') {
+                  console.log("Side by side control is set to overview...");
+                  perma_sbs=false;
+                }
+               else
+               {
+                  console.log("Side by side control is set to always...");
+                  perma_sbs=true;
+                }
+            // trigger a cameraSwitch evaluation
+            lastActiveHighInput = 0;
+         }
 
          if (event.WidgetId === 'widget_FS_selfview')
          {
