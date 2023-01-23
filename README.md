@@ -36,6 +36,10 @@ It features the following enhancements:
   sent to the far side as a side by side composition with the camera that is detecting audio activity with SpeakerTrack turned on while
   the other one is showing the overview camera preset.
 
+1/23/23 Update:
+
+- Changed inter-codec communication to GMM Library queue method for more resiliency
+
 ## Contacts
 
 - Gerardo Chaves (gchaves@cisco.com)
@@ -50,7 +54,7 @@ It features the following enhancements:
 ## Requirements
 
 - Devices must be running RoomOS 10.8 or later
-- If running RoomOS 11, must be 11.0.0.4 or later
+- If running RoomOS 11, must be 11.0.0.4 or later for base functionality but for side-by-side mode you need at least version 11.2.1
 
 ## Installation/Configuration
 
@@ -66,12 +70,12 @@ video output connected to the main codec into it's HDMI 2 input.
 If you only have one Webex Codec and will not be trying to use 2 QuadCams, you can just use one of the macros ('main_codec_macro.js') on
 that codec to control any allowed combination 4K PTZ cameras, a Cisco SpeakerTrack 60 camera array or a QuadCam camera.
 
-This sample also includes the GMM_Lib macro that is needed for compatibility with the USB Mode V3 Beta macro. Version 3.0.6 of that macro is also included but if you have a newer version you can use that one instead.  
+This sample also includes the GMM_Lib macro that is needed for compatibility with the USB Mode V3 Beta macro and improved inter-codec communication. Version 3.0.6 of that macro is also included but if you have a newer version you can use that one instead.  
 NOTE: You cannot change the name of the USB Mode v3 macro or else the code in `main_codec_macro.js` will not be able to communicate with it. The name of that macro as stored in your codec must start with "USB_Mode_Version_3" but can have other characters after that.
 
-NOTE: Even if you do not plan on installing and using the USB Mode V3 macro, you do need to install the GMM_Lib macro on the main codec. To
+NOTE: Even if you do not plan on installing and using the USB Mode V3 macro, you do need to install the GMM_Lib macro on the main and aux codecs. To
 do so, just create a new macro called "GMM_Lib" and copy the contents of the GMM_Lib.js file in this repository to it. Save it but do not turn
-it on; it is just a library that the main_codec_macro loads.
+it on; it is just a library that main_codec_macro and aux_codec_macro loads.
 
 You can find technical drawings and connection diagrams for the most common scenarios supported by this macro here:
 [Boardroom_2_0_System_Drawing_REV_3.pdf](Boardroom_2_0_System_Drawing_REV_3.pdf)

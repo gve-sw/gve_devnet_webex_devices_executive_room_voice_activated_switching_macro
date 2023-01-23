@@ -233,6 +233,9 @@ let has_SpeakerTrack= MAP_CAMERA_SOURCES.indexOf(SP) != -1 ||
 // VARIABLES
 /////////////////////////////////////////////////////////////////////////////////////////
 let AUX_CODEC={ enable: (AUX_CODEC_IP!='') , online: false, url: AUX_CODEC_IP, auth: AUX_CODEC_AUTH};
+//Declare your object for GMM communication
+var auxCodec;
+
 let micArrays={};
 for (var i in MICROPHONE_CONNECTORS) {
     micArrays[MICROPHONE_CONNECTORS[i].toString()]=[0,0,0,0];
@@ -342,10 +345,13 @@ function evalSelfView(value) {
 
 async function init() {
   console.log('init');
-  // configure HTTP settings
-  xapi.config.set('HttpClient Mode', 'On').catch(handleError);
-  xapi.config.set('HttpClient AllowInsecureHTTPS:', 'True').catch(handleError);
-  xapi.config.set('HttpClient AllowHTTP:', 'True').catch(handleError);
+
+  try {
+    auxCodec = new GMM.Connect.IP(AUX_CODEC_AUTH, '', AUX_CODEC_IP)
+  } catch (e) {
+    console.error(e)
+  }
+
 
   // Stop any VuMeters that might have been left from a previous macro run with a different MICROPHONE_CONNECTORS constant
   // to prevent errors due to unhandled vuMeter events.
@@ -925,33 +931,24 @@ GMM.Event.Receiver.on(event => {
 // INTER-CODEC COMMUNICATION
 /////////////////////////////////////////////////////////////////////////////////////////
 
-async function sendIntercodecMessage(codec, message) {
-
+async function sendIntercodecMessage(codec, message) { 
   if (codec.enable) {
     console.log(`sendIntercodecMessage: codec = ${codec.url} | message = ${message}`);
-
-    const parameters = {
-      Url: `https://${codec.url}/putxml`,
-      Header: ['Content-Type: text/xml', 'Authorization: Basic ' + codec.auth],
-      AllowInsecureHTTPS: 'True'
-    }
-
-    const body = `<Command><Message><Send><Text>${message}</Text></Send></Message></Command>`;
-
-    try {
-      const request = await xapi.Command.HTTPClient.Post(parameters, body);
-      console.log({ Message: `Success`, Payload: body, StatusCode: request.StatusCode, Status: request.status })
-    } catch (e) {
-      if ('data' in e) {
-        console.error({ Error: e.message, StatusCode: e.data.StatusCode, Status: e.data.status })
-      } else {
-        console.error({ Error: e.message })
-      }
-
-      alertFailedIntercodecComm(`Error connecting to codec for second camera, please contact the Administrator`)
-    }
+    if (auxCodec!='') auxCodec.status(message).queue().catch(e=>{
+      console.log('Error sending message');
+      alertFailedIntercodecComm("Error connecting to codec for second camera, please contact the Administrator");
+    });
  }
-} 
+}
+
+GMM.Event.Queue.on(report => {
+  //The queue will continuously log a report to the console, even when it's empty.
+  //To avoid additional messages, we can filter the Queues Remaining Requests and avoid it if it's equal to Empty
+  if (report.QueueStatus.RemainingRequests != 'Empty') {
+    report.Response.Headers = [] // Clearing Header response for the simplicity of the demo, you may need this info
+    //console.log(report)
+  }
+});
 
 function alertFailedIntercodecComm(message) {
         xapi.command("UserInterface Message Alert Display", {

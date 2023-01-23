@@ -14,6 +14,7 @@ or implied.
 */
 
 import xapi from 'xapi';
+import { GMM } from './GMM_Lib'
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // INSTALLER SETTINGS
@@ -80,6 +81,8 @@ xapi.command('Video Selfview Set', {Mode: 'On', FullScreenMode: 'On', OnMonitorR
 
 let main_codec = { url: MAIN_CODEC_IP, auth: MAIN_CODEC_AUTH};
 
+//Declare your object for GMM communication
+var mainCodec;
 /////////////////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -89,10 +92,11 @@ let main_codec = { url: MAIN_CODEC_IP, auth: MAIN_CODEC_AUTH};
 function init() {
   console.log('init');
 
-  // configure HTTP settings
-  xapi.config.set('HttpClient Mode', 'On').catch(handleError);
-  xapi.config.set('HttpClient AllowInsecureHTTPS:', 'True').catch(handleError);
-  xapi.config.set('HttpClient AllowHTTP:', 'True').catch(handleError);
+  try {
+    mainCodec = new GMM.Connect.IP(MAIN_CODEC_AUTH, '', MAIN_CODEC_IP)
+  } catch (e) {
+    console.error(e)
+  }
 
   // register callback for processing messages from main codec
   xapi.event.on('Message Send', handleMessage);
@@ -105,34 +109,25 @@ function handleError(error) {
 
 // ---------------------- INTER-CODEC COMMUNICATION
 
-
-
-async function sendIntercodecMessage(message) {
-
+async function sendIntercodecMessage(message) { 
+  if (codec.enable) {
     console.log(`sendIntercodecMessage: codec = ${main_codec.url} | message = ${message}`);
+    if (mainCodec!='') mainCodec.status(message).queue().catch(e=>{
+      console.log('Error sending message');
+      alertFailedIntercodecComm("Error connecting to codec for first camera, please contact the Administrator");
+    });
+ }
+}
 
-    const parameters = {
-      Url: `https://${main_codec.url}/putxml`,
-      Header: ['Content-Type: text/xml', 'Authorization: Basic ' + main_codec.auth],
-      AllowInsecureHTTPS: 'True'
-    }
 
-    const body = `<Command><Message><Send><Text>${JSON.stringify(message)}</Text></Send></Message></Command>`;
-
-    try {
-      const request = await xapi.Command.HTTPClient.Post(parameters, body);
-      console.log({ Message: `Success`, Payload: body, StatusCode: request.StatusCode, Status: request.status })
-    } catch (e) {
-      if ('data' in e) {
-        console.error({ Error: e.message, StatusCode: e.data.StatusCode, Status: e.data.status })
-      } else {
-        console.error({ Error: e.message })
-      }
-
-      alertFailedIntercodecComm(`Error connecting to codec for second camera, please contact the Administrator`)
-    }
-} 
-
+GMM.Event.Queue.on(report => {
+  //The queue will continuously log a report to the console, even when it's empty.
+  //To avoid additional messages, we can filter the Queues Remaining Requests and avoid it if it's equal to Empty
+  if (report.QueueStatus.RemainingRequests != 'Empty') {
+    report.Response.Headers = [] // Clearing Header response for the simplicity of the demo, you may need this info
+    //console.log(report)
+  }
+});
 
 // ---------------------- MACROS
 
