@@ -40,6 +40,12 @@ It features the following enhancements:
 
 - Changed inter-codec communication to GMM Library queue method for more resiliency
 
+2/28/23 Update:
+
+- Bug fixes in inter-codec communication
+- Added background mode support to improve Speakertracking performance when switching back to quadcam. You can go back to not
+  using SpeakerTrack background mode by setting the constant USE_ST_BG_MODE to false
+
 ## Contacts
 
 - Gerardo Chaves (gchaves@cisco.com)

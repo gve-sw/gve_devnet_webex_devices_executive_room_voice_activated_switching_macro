@@ -18,6 +18,9 @@ or implied.
 import xapi from 'xapi';
 import { GMM } from './GMM_Lib'
 
+//TODO: Test pause speakertrack with perma side by side mode since it originall would try to turn on ST
+
+
 /////////////////////////////////////////////////////////////////////////////////////////
 // INSTALLER SETTINGS
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -41,6 +44,9 @@ const AUX_CODEC_PASSWORD='password';
 
 // Video source and SpeakerTrack constants needed for defining mapping. DO NOT EDIT
 const  SP=0, V1=1, V2=2, V3=3, V4=4, V5=5, V6=6
+
+// Set USE_ST_BG_MODE to true if you want keep Quacams Speaker Tracking even while not being used
+const USE_ST_BG_MODE=true;
 
 /*
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -370,9 +376,6 @@ async function init() {
       }
   });
 
-  // register callback for processing messages from aux_codec
-  xapi.event.on('Message Send', handleMessage);
-
   // register event handlers for local events
   xapi.Status.Standby.State
 	.on(value => {
@@ -511,6 +514,8 @@ function stopAutomation() {
          stopSideBySideTimer();
          stopNewSpeakerTimer();
          stopInitialCallTimer();
+         lastActiveHighInput = 0; //TODO: check to see if this improves turning on/off the automation
+         lowWasRecalled = true; //TODO: check to see if this improves turning on/of the automation
          console.log("Stopping all VuMeters...");
          xapi.Command.Audio.VuMeter.StopAll({ });
          //TODO: check to see if when we stop automation we really want to switch to connectorID 1
@@ -598,13 +603,15 @@ async function makeCameraSwitch(input, average) {
     if (selectedSource==SP) {
         // if the active camera is a SpeakerTrack camera, just activate it, no need to set main video source to it
         console.log('Switching to SpeakerTrack camera');
+        resumeSpeakerTrack();
         xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
     }
     else {
           // the Video Input SetMainVideoSource does not work while Speakertrack is active
           // so we need to turn it off in case the previous video input was from a source where
           // SpeakerTrack is used.
-          xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
+          //xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
+          pauseSpeakerTrack();
            // Switch to the source that is speficied in the same index position in MAP_CAMERA_SOURCE_IDS
           let sourceDict={ SourceID : '0'}
           sourceDict["SourceID"]=selectedSource.toString();
@@ -613,7 +620,8 @@ async function makeCameraSwitch(input, average) {
           if ((MAP_CAMERA_SOURCES.indexOf(SP)==-1) && (selectedSource==MAIN_CODEC_QUADCAM_SOURCE_ID) ) {
               // if the codec is using a QuadCam (no SpeakerTrack camera allowed) then
               // turn back on SpeakerTrack function on the codec in case it was turned off in side by side mode.
-              xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
+              //xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
+              resumeSpeakerTrack();
           }
       }
       // if we are not switching to a camera zone with PTZ cameras, we need to re-set the
@@ -685,7 +693,8 @@ function setMainVideoSource(thePresetVideoSource) {
     // the Video Input SetMainVideoSource does not work while Speakertrack is active
     // so we need to turn it off in case the previous video input was from a source where
     // SpeakerTrack is used.
-    if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
+    //if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
+    if (has_SpeakerTrack) pauseSpeakerTrack();
 
     let sourceDict={ SourceID : '0'}
     sourceDict["SourceID"]=thePresetVideoSource.toString();
@@ -728,7 +737,9 @@ async function recallSideBySideMode() {
         connectorDict["ConnectorId"]=OVERVIEW_DOUBLE_SOURCE_IDS;
         console.log("Trying to use this for connector dict in recallSideBySideMode(): ", connectorDict  )
         xapi.command('Video Input SetMainVideoSource', connectorDict).catch(handleError);
-        if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
+        //if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
+        if (has_SpeakerTrack) pauseSpeakerTrack();
+
         xapi.command('Camera Preset Activate', { PresetId: 30 }).catch(handleError);
 
         const payload = { EditMatrixOutput: { sources: connectorDict["ConnectorId"] } };
@@ -745,12 +756,14 @@ async function recallSideBySideMode() {
             sourceDict["SourceID"]=OVERVIEW_SINGLE_SOURCE_ID.toString();
             console.log("Trying to use this for source dict in recallSideBySideMode(): ", sourceDict  )
             xapi.command('Video Input SetMainVideoSource', sourceDict).catch(handleError);
-            if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
+            //if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
+            if (has_SpeakerTrack) pauseSpeakerTrack();
         }
         else {
                 // If OVERVIEW_PRESET_ZONE is defined as something other than Z0, switch to that
                 console.log('Recall side by side mode switching to preset OVERVIEW_PRESET_ZONE...');
-                if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
+                //if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
+                if (has_SpeakerTrack) pauseSpeakerTrack();
                 switchToVideoZone(OVERVIEW_PRESET_ZONE);
         }
     }
@@ -771,10 +784,13 @@ async function permaSideBySideMode(selectedSource) {
 
         if (MAIN_CODEC_QUADCAM_SOURCE_ID==selectedSource) {
           await sendIntercodecMessage(AUX_CODEC, 'side_by_side');
-          if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
+          //if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
+          resumeSpeakerTrack(); 
+
         } else {
           await sendIntercodecMessage(AUX_CODEC, 'automatic_mode');
-          if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
+          //if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
+          if (has_SpeakerTrack) pauseSpeakerTrack();
           xapi.command('Camera Preset Activate', { PresetId: 30 }).catch(handleError);        
         }
 
@@ -922,9 +938,17 @@ GMM.Event.Receiver.on(event => {
             })
           }
         }
-
+        else
+        switch (event.Value) {
+          case "VTC-1_OK":
+            handleCodecOnline(AUX_CODEC);
+            break;
+          default:
+            break;
+        }
 
       })
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -972,19 +996,14 @@ function handleMicMuteOn() {
 function handleMicMuteOff() {
   console.log('handleMicMuteOff');
   // need to turn back on SpeakerTrack that might have been turned off when going on mute
-  if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
+  //if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
+  if (has_SpeakerTrack) resumeSpeakerTrack();
+
 }
 
 // ---------------------- MACROS
 
 
-function handleMessage(event) {
-  switch(event.Text) {
-    case "VTC-1_OK":
-      handleCodecOnline(AUX_CODEC);
-      break;
-  }
-}
 
 // function to check the satus of the macros running on the AUX codec
 async function handleMacroStatus() {
@@ -1012,7 +1031,7 @@ async function handleWakeUp() {
   await sendIntercodecMessage(AUX_CODEC, 'wake_up');
   // check the satus of the macros running on the AUX codec and store it in AUX_CODEC.online
   // in case we need to check it in some other function
-  handleMacroStatus();
+  setTimeout(handleMacroStatus,2000);
 }
 
 async function handleShutDown() {
@@ -1064,7 +1083,8 @@ function onInitialCallTimerExpired() {
   InitialCallTimer=null;
   if (!manual_mode) {
     allowCameraSwitching = true;
-    if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
+    //if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
+    resumeSpeakerTrack();
   }
 }
 
@@ -1097,6 +1117,17 @@ function restartNewSpeakerTimer() {
 function onNewSpeakerTimerExpired() {
   allowNewSpeaker = true;
 }
+
+function resumeSpeakerTrack() {
+  if (USE_ST_BG_MODE) xapi.Command.Cameras.SpeakerTrack.BackgroundMode.Deactivate().catch(handleError);
+  else xapi.Command.Cameras.SpeakerTrack.Activate().catch(handleError);
+}
+
+function pauseSpeakerTrack() {
+  if (USE_ST_BG_MODE) xapi.Command.Cameras.SpeakerTrack.BackgroundMode.Activate().catch(handleError);
+  else xapi.Command.Cameras.SpeakerTrack.Deactivate().catch(handleError);
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // INVOCATION OF INIT() TO START THE MACRO

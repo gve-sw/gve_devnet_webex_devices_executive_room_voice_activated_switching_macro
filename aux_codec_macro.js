@@ -28,6 +28,8 @@ const MAIN_CODEC_IP ='10.10.10.11';
 const MAIN_CODEC_USERNAME='username';
 const MAIN_CODEC_PASSWORD='password';
 
+// Set USE_ST_BG_MODE to true if you want keep Quacams Speaker Tracking even while not being used
+const USE_ST_BG_MODE=true;
 
 /*
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -99,7 +101,7 @@ function init() {
   }
 
   // register callback for processing messages from main codec
-  xapi.event.on('Message Send', handleMessage);
+  xapi.Command.Cameras.SpeakerTrack.Activate();
 }
 // ---------------------- ERROR HANDLING
 
@@ -107,16 +109,45 @@ function handleError(error) {
   console.log(error);
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
+// INTER-MACRO MESSAGE HANDLING
+/////////////////////////////////////////////////////////////////////////////////////////
+GMM.Event.Receiver.on(event => {
+    if (event.Type == 'Error') {
+      console.error(event)
+    } else {
+      switch (event.Value) {
+        case "VTC-1_status":
+          handleMacroStatus();
+          break;
+        case 'wake_up':
+          handleWakeUp();
+          break;
+        case 'shut_down':
+          handleShutDown();
+          break;
+        case 'side_by_side':
+          handleSideBySide();
+          break;
+        case 'automatic_mode':
+          handleAutomaticMode();
+          break;
+        default:
+          break;
+      }
+    }
+})
+
+
+
 // ---------------------- INTER-CODEC COMMUNICATION
 
 async function sendIntercodecMessage(message) { 
-  if (codec.enable) {
     console.log(`sendIntercodecMessage: codec = ${main_codec.url} | message = ${message}`);
     if (mainCodec!='') mainCodec.status(message).queue().catch(e=>{
       console.log('Error sending message');
       alertFailedIntercodecComm("Error connecting to codec for first camera, please contact the Administrator");
     });
- }
 }
 
 
@@ -131,27 +162,6 @@ GMM.Event.Queue.on(report => {
 
 // ---------------------- MACROS
 
-function handleMessage(event) {
-  console.log(`handleMessage: ${event.Text}`);
-  
-  switch(event.Text) {
-    case "VTC-1_status":
-      handleMacroStatus();
-      break;
-    case 'wake_up':
-      handleWakeUp();
-      break;
-    case 'shut_down':
-      handleShutDown();
-      break;
- case 'side_by_side':
-      handleSideBySide();
-      break;
- case 'automatic_mode':
-      handleAutomaticMode();
-      break;
-  }
-}
 
 async function handleMacroStatus() {
   console.log('handleMacroStatus');
@@ -163,6 +173,8 @@ function handleWakeUp() {
 
   // send required commands to this codec
   xapi.command('Standby Deactivate').catch(handleError);
+  xapi.Command.Cameras.SpeakerTrack.Activate();
+
 }
 
 function handleShutDown() {
@@ -176,7 +188,8 @@ function handleSideBySide() {
   console.log('handleSideBySide');
 
   // send required commands to this codec
-  xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
+  //xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
+  pauseSpeakerTrack();
   xapi.command('Camera Preset Activate', { PresetId: 30 }).catch(handleError);
 }
 
@@ -184,7 +197,19 @@ function handleAutomaticMode() {
   console.log('handleAutomaticMode');
 
   // send required commands to this codec
-  xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
+  //xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
+  resumeSpeakerTrack();
+}
+
+function resumeSpeakerTrack() {
+  if (USE_ST_BG_MODE) xapi.Command.Cameras.SpeakerTrack.BackgroundMode.Deactivate().catch(handleError);
+  else xapi.Command.Cameras.SpeakerTrack.Activate().catch(handleError);
+}
+
+function pauseSpeakerTrack() {
+
+  if (USE_ST_BG_MODE) xapi.Command.Cameras.SpeakerTrack.BackgroundMode.Activate().catch(handleError);
+  else xapi.Command.Cameras.SpeakerTrack.Deactivate().catch(handleError);
 }
 
 xapi.Status.Cameras.SpeakerTrack.Availability
