@@ -118,6 +118,15 @@ const MAIN_CODEC_QUADCAM_SOURCE_ID=1;
 // Only cameras involved in the camera zone preset objects (Z1 - Z8) need to be mapped here
 const MAP_PTZ_CAMERA_VIDEO_SOURCE_ID = { '2':6, '3':2, '4':4 };
 
+// In RoomOS 11 there are multiple SpeakerTrack default behaviors to choose from on the navigator or
+// Touch10 device. Set ST_DEFAULT_BEHAVIOR to the one you want this macro to use from these choices:
+// Auto: The same as BestOverview.
+// BestOverview: The default framing mode is Best overview. 
+// Closeup: The default framing mode is Closeup (speaker tracking). 
+// Current: The framing mode is kept unchanged when leaving a call. 
+// Frames: The default framing mode is Frames.
+const ST_DEFAULT_BEHAVIOR='Closeup'
+
 // This next line hides the mid-call controls “Lock meeting” and “Record”.  The reason for this is so that the
 // “Camera Control” button can be seen.  If you prefer to have the mid-call controls showing, change the value of this from “Hidden” to “Auto”
 xapi.Config.UserInterface.Features.Call.MidCallControls.set("Hidden");
@@ -409,10 +418,9 @@ async function init() {
     isOSTen=await check4_Minimum_Version_Required(minOS10Version);
     isOSEleven=await check4_Minimum_Version_Required(minOS11Version);
 
-    // register WebRTC Mode if RoomOS 11
+    // register WebRTC Mode and HDMI Passhtorugh mode handlers if RoomOS 11
     if (isOSEleven) {
-        xapi.Status.UserInterface.WebView.Type
-        .on(async(value) => {
+        xapi.Status.UserInterface.WebView.Type.on(async(value) => {
           if (value==='WebRTCMeeting') {
             webrtc_mode=true;
 
@@ -429,6 +437,19 @@ async function init() {
                 stopAutomation();
               }
 
+          }
+        });
+
+        xapi.Status.Video.Output.HDMI.Passthrough.Status.on(value => {
+          console.log(value)
+          if (value=='Active') {
+            console.warn(`System is in Passthrough Active Mode`)
+            startAutomation();
+            usb_mode= true;
+          } else {
+            console.warn(`System is in Passthrough Inactive Mode`)
+            stopAutomation();
+            usb_mode= false;
           }
         });
     }
@@ -467,6 +488,7 @@ async function startAutomation() {
 
    if (isOSEleven) {
    try {
+    xapi.Config.Cameras.SpeakerTrack.DefaultBehavior.set(ST_DEFAULT_BEHAVIOR);
     const webViewType = await xapi.Status.UserInterface.WebView.Type.get()
     if (webViewType=='WebRTCMeeting') webrtc_mode=true;
    } catch (e) {
@@ -903,11 +925,11 @@ GMM.Event.Receiver.on(event => {
                     console.warn(`USB mode initialized...`)
                     updateUSBModeConfig();
                     break;
-                  case 'EnteringWebexMode':
+                  case 'EnteringWebexMode': case 'Entering_Default_Mode': case 'EnteringDefaultMode':
                     console.warn(`You are entering Webex Mode`)
                     //Run code here when Default Mode starts to configure
                     break;
-                  case 'WebexModeStarted':
+                  case 'WebexModeStarted': case 'DefaultModeStarted':
                     console.warn(`System is in Default Mode`)
                     stopAutomation();
                     usb_mode= false;

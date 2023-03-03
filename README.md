@@ -46,6 +46,12 @@ It features the following enhancements:
 - Added background mode support to improve Speakertracking performance when switching back to quadcam. You can go back to not
   using SpeakerTrack background mode by setting the constant USE_ST_BG_MODE to false
 
+3/3/23
+
+- Updated support for USB Mode v3 macro to support version v3-0-7 Beta
+- Added support for RoomOS 11 HDMI Passthrough (call from Laptop) feature
+- Added ability to set SpeakerTrack default behavior in RoomOS 11 with ST_DEFAULT_BEHAVIOR constant
+
 ## Contacts
 
 - Gerardo Chaves (gchaves@cisco.com)
