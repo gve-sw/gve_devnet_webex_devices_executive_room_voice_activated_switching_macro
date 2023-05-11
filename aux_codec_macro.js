@@ -11,6 +11,33 @@ reserved. Unless required by applicable law or agreed to separately in
 writing, software distributed under the License is distributed on an "AS
 IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 or implied.
+*
+* Repository: gve_devnet_webex_devices_executive_room_voice_activated_switching_macro
+* Macro file: aux_codec_macro
+* Version: 2.1.1
+* Released: May 11, 2023
+* Latest RoomOS version tested: 11.5.0.24 (Beta)
+*
+* Macro Author:      	Gerardo Chaves
+*                    	Technical Solutions Architect
+*                    	gchaves@cisco.com
+*                    	Cisco Systems
+*
+* Consulting Engineer: Robert(Bobby) McGonigle Jr
+*                    	 Technical Marketing Engineer
+*                    	 bomcgoni@cisco.com
+*                    	 Cisco Systems
+* 
+*    
+* 
+*    As a macro, the features and functions of this webex devices executive room voice activated 
+*    switching macro are not supported by Cisco TAC
+* 
+*    Hardware and Software support are provided by their respective manufacturers 
+*      and the service agreements they offer
+*    
+*    Should you need assistance with this macro, reach out to your Cisco sales representative
+*    so they can engage the GVE DevNet team. 
 */
 
 import xapi from 'xapi';
@@ -21,15 +48,15 @@ import { GMM } from './GMM_Lib'
 /////////////////////////////////////////////////////////////////////////////////////////
 
 // IP Address of MAIN codec (i.e. CodecPro)
-const MAIN_CODEC_IP ='10.10.10.11';
+const MAIN_CODEC_IP = '10.10.10.11';
 
 // MAIN_CODEC_USERNAME and MAIN_CODEC_PASSWORD are the username and password of a user with integrator or admin roles on the Main Codec
 // Here are instructions on how to configure local user accounts on Webex Devices: https://help.webex.com/en-us/jkhs20/Local-User-Administration-on-Room-and-Desk-Devices)
-const MAIN_CODEC_USERNAME='username';
-const MAIN_CODEC_PASSWORD='password';
+const MAIN_CODEC_USERNAME = 'username';
+const MAIN_CODEC_PASSWORD = 'password';
 
 // Set USE_ST_BG_MODE to true if you want keep Quacams Speaker Tracking even while not being used
-const USE_ST_BG_MODE=true;
+const USE_ST_BG_MODE = true;
 
 /*
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -43,21 +70,21 @@ const USE_ST_BG_MODE=true;
 /////////////////////////////////////////////////////////////////////////////////////////
 
 function encode(s) {
-    var c = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
+  var c = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
     o = [];
-    for (var i = 0, n = s.length; i < n;) {
-      var c1 = s.charCodeAt(i++),
+  for (var i = 0, n = s.length; i < n;) {
+    var c1 = s.charCodeAt(i++),
       c2 = s.charCodeAt(i++),
       c3 = s.charCodeAt(i++);
-      o.push(c.charAt(c1 >> 2));
-      o.push(c.charAt(((c1 & 3) << 4) | (c2 >> 4)));
-      o.push(c.charAt(i < n + 2 ? ((c2 & 15) << 2) | (c3 >> 6) : 64));
-      o.push(c.charAt(i < n + 1 ? c3 & 63 : 64));
-    }
+    o.push(c.charAt(c1 >> 2));
+    o.push(c.charAt(((c1 & 3) << 4) | (c2 >> 4)));
+    o.push(c.charAt(i < n + 2 ? ((c2 & 15) << 2) | (c3 >> 6) : 64));
+    o.push(c.charAt(i < n + 1 ? c3 & 63 : 64));
+  }
   return o.join("");
 }
 
-const MAIN_CODEC_AUTH=encode(MAIN_CODEC_USERNAME+':'+MAIN_CODEC_PASSWORD);
+const MAIN_CODEC_AUTH = encode(MAIN_CODEC_USERNAME + ':' + MAIN_CODEC_PASSWORD);
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // STARTUP SCRIPT
@@ -69,19 +96,19 @@ const MAIN_CODEC_AUTH=encode(MAIN_CODEC_USERNAME+':'+MAIN_CODEC_PASSWORD);
 xapi.config.set('Video Monitors', 'Single');
 xapi.config.set('Video Output Connector 1 MonitorRole', 'First');
 xapi.config.set('Standby Halfwake Mode', 'Manual').catch((error) => {
-      console.log('Your software version does not support this configuration.  Please install ‘Custom Wallpaper’ on the codec in order to prevent Halfwake mode from occurring.');
-      console.error(error);
-  });
+  console.log('Your software version does not support this configuration.  Please install ‘Custom Wallpaper’ on the codec in order to prevent Halfwake mode from occurring.');
+  console.error(error);
+});
 
 xapi.config.set('Standby Control', 'Off');
-xapi.command('Video Selfview Set', {Mode: 'On', FullScreenMode: 'On', OnMonitorRole: 'First'})
-    .catch((error) => { console.error(error); });
+xapi.command('Video Selfview Set', { Mode: 'On', FullScreenMode: 'On', OnMonitorRole: 'First' })
+  .catch((error) => { console.error(error); });
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // VARIABLES
 /////////////////////////////////////////////////////////////////////////////////////////
 
-let main_codec = { url: MAIN_CODEC_IP, auth: MAIN_CODEC_AUTH};
+let main_codec = { url: MAIN_CODEC_IP, auth: MAIN_CODEC_AUTH };
 
 //Declare your object for GMM communication
 var mainCodec;
@@ -113,41 +140,41 @@ function handleError(error) {
 // INTER-MACRO MESSAGE HANDLING
 /////////////////////////////////////////////////////////////////////////////////////////
 GMM.Event.Receiver.on(event => {
-    if (event.Type == 'Error') {
-      console.error(event)
-    } else {
-      switch (event.Value) {
-        case "VTC-1_status":
-          handleMacroStatus();
-          break;
-        case 'wake_up':
-          handleWakeUp();
-          break;
-        case 'shut_down':
-          handleShutDown();
-          break;
-        case 'side_by_side':
-          handleSideBySide();
-          break;
-        case 'automatic_mode':
-          handleAutomaticMode();
-          break;
-        default:
-          break;
-      }
+  if (event.Type == 'Error') {
+    console.error(event)
+  } else {
+    switch (event.Value) {
+      case "VTC-1_status":
+        handleMacroStatus();
+        break;
+      case 'wake_up':
+        handleWakeUp();
+        break;
+      case 'shut_down':
+        handleShutDown();
+        break;
+      case 'side_by_side':
+        handleSideBySide();
+        break;
+      case 'automatic_mode':
+        handleAutomaticMode();
+        break;
+      default:
+        break;
     }
+  }
 })
 
 
 
 // ---------------------- INTER-CODEC COMMUNICATION
 
-async function sendIntercodecMessage(message) { 
-    console.log(`sendIntercodecMessage: codec = ${main_codec.url} | message = ${message}`);
-    if (mainCodec!='') mainCodec.status(message).queue().catch(e=>{
-      console.log('Error sending message');
-      alertFailedIntercodecComm("Error connecting to codec for first camera, please contact the Administrator");
-    });
+async function sendIntercodecMessage(message) {
+  console.log(`sendIntercodecMessage: codec = ${main_codec.url} | message = ${message}`);
+  if (mainCodec != '') mainCodec.status(message).queue().catch(e => {
+    console.log('Error sending message');
+    alertFailedIntercodecComm("Error connecting to codec for first camera, please contact the Administrator");
+  });
 }
 
 
@@ -213,11 +240,11 @@ function pauseSpeakerTrack() {
 }
 
 xapi.Status.Cameras.SpeakerTrack.Availability
-    .on((value) => {
-        console.log("Event received for SpeakerTrack Availability: ",value)
-        if (value=="Available"){
-         init()
-        }
-    });
+  .on((value) => {
+    console.log("Event received for SpeakerTrack Availability: ", value)
+    if (value == "Available") {
+      init()
+    }
+  });
 
 init();

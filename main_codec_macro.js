@@ -10,6 +10,33 @@ reserved. Unless required by applicable law or agreed to separately in
 writing, software distributed under the License is distributed on an "AS
 IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 or implied.
+*
+* Repository: gve_devnet_webex_devices_executive_room_voice_activated_switching_macro
+* Macro file: main_codec_macro
+* Version: 2.1.1
+* Released: May 11, 2023
+* Latest RoomOS version tested: 11.5.0.24 (Beta)
+*
+* Macro Author:      	Gerardo Chaves
+*                    	Technical Solutions Architect
+*                    	gchaves@cisco.com
+*                    	Cisco Systems
+*
+* Consulting Engineer: Robert(Bobby) McGonigle Jr
+*                    	 Technical Marketing Engineer
+*                    	 bomcgoni@cisco.com
+*                    	 Cisco Systems
+* 
+*    
+* 
+*    As a macro, the features and functions of this webex devices executive room voice activated 
+*    switching macro are not supported by Cisco TAC
+* 
+*    Hardware and Software support are provided by their respective manufacturers 
+*      and the service agreements they offer
+*    
+*    Should you need assistance with this macro, reach out to your Cisco sales representative
+*    so they can engage the GVE DevNet team. 
 */
 /////////////////////////////////////////////////////////////////////////////////////////
 // REQUIREMENTS
@@ -34,19 +61,19 @@ import { GMM } from './GMM_Lib'
 
 // IP Address of AUX codec (i.e. CodecPlus)
 // NOTE: if there is no auxiliary codec, you must set the value of AUX_CODEC_IP to ''  (const AUX_CODEC_IP ='')
-const AUX_CODEC_IP ='10.10.10.10';
+const AUX_CODEC_IP = '10.10.10.10';
 
 // AUX_CODEC_USERNAME and AUX_CODEC_PASSWORD are the username and password of a admin-level user on the Auxiliary codec
 // Here are instructions on how to configure local user accounts on Webex Devices:
 // https://help.webex.com/en-us/jkhs20/Local-User-Administration-on-Room-and-Desk-Devices)
-const AUX_CODEC_USERNAME='username';
-const AUX_CODEC_PASSWORD='password';
+const AUX_CODEC_USERNAME = 'username';
+const AUX_CODEC_PASSWORD = 'password';
 
 // Video source and SpeakerTrack constants needed for defining mapping. DO NOT EDIT
-const  SP=0, V1=1, V2=2, V3=3, V4=4, V5=5, V6=6
+const SP = 0, V1 = 1, V2 = 2, V3 = 3, V4 = 4, V5 = 5, V6 = 6
 
 // Set USE_ST_BG_MODE to true if you want keep Quacams Speaker Tracking even while not being used
-const USE_ST_BG_MODE=true;
+const USE_ST_BG_MODE = true;
 
 /*
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -72,9 +99,9 @@ const USE_ST_BG_MODE=true;
 // V1, or V2 (video inputs used by Aux Codec Plus that run their own Quad Camera)
 // NOTE: If you do not have a secondary preset for a zone, just use the same as the primary as the code needs that 'secondary' key present
 
-const Z0= {'primary': 0, 'secondary': 0} //DO NOT DELETE OR COMMENT ME!!!!!
-const Z1= {'primary': 11, 'secondary': 12} // These are ok to change
-const Z2= {'primary': 14, 'secondary': 13} // These are ok to change
+const Z0 = { 'primary': 0, 'secondary': 0 } //DO NOT DELETE OR COMMENT ME!!!!!
+const Z1 = { 'primary': 11, 'secondary': 12 } // These are ok to change
+const Z2 = { 'primary': 14, 'secondary': 13 } // These are ok to change
 // Add camera zones below if needed to map in MAP_CAMERA_SOURCES, up to to Z8 but they can reference
 // preset IDs 11-35 depending on which are configured on the codec. PresetID 30 IS RESERVED FOR USE BY THE PROGRAM
 //Z3= {'primary': 5,'secondary': 6}
@@ -89,7 +116,7 @@ const Z2= {'primary': 14, 'secondary': 13} // These are ok to change
 // Microphone Input Numbers to Monitor
 // Specify the input connectors associated to the microphones being used in the room
 // For example, if you set the value to [1,2,3,4,5,6,7,8] the macro will evaluate mic input id's 1-8 for its switching logic
-const MICROPHONE_CONNECTORS = [1,2,3,4,5,6,7,8];
+const MICROPHONE_CONNECTORS = [1, 2, 3, 4, 5, 6, 7, 8];
 
 // Camera source IDs that correspond to each microphone in MICROPHONE_CONNECTORS array
 // Associate the connectors to specific input source type/id corresponding to the camera that covers where the mic is located.
@@ -100,13 +127,13 @@ const MICROPHONE_CONNECTORS = [1,2,3,4,5,6,7,8];
 // mic 7 is associated to PTZ camera defined in the zone Z1 object above and
 // mic 8 is associated to PTZ camera defined in the zone Z2 object above
 // Valid values for entries in the MAP_CAMERA_SOURCES array are: SP, V1-V2 and Z1-Z8
-const MAP_CAMERA_SOURCES = [V1,V1,V1,V2,V2,V2,Z1,Z2];
+const MAP_CAMERA_SOURCES = [V1, V1, V1, V2, V2, V2, Z1, Z2];
 
 // Specifying which sourceID belongs to local QuadCam
 // MAIN_CODEC_QUADCAM_SOURCE_ID should contain the SourceID where the QuadCam connected
 // to the main codec (if any) is connected. This it typically SourceID 1. If no QuadCam is connected
 // then set this to 0
-const MAIN_CODEC_QUADCAM_SOURCE_ID=1;
+const MAIN_CODEC_QUADCAM_SOURCE_ID = 1;
 
 // Mapping of video sources to CameraIDs for PTZ cameras
 // MAP_PTZ_CAMERA_VIDEO_SOURCE_ID contains an object of key/value pairs that maps
@@ -116,7 +143,7 @@ const MAIN_CODEC_QUADCAM_SOURCE_ID=1;
 // to video source 6. You can define as many cameras as needed in this object or leave it with the
 // sample values defined below if you are not using PTZ cameras.
 // Only cameras involved in the camera zone preset objects (Z1 - Z8) need to be mapped here
-const MAP_PTZ_CAMERA_VIDEO_SOURCE_ID = { '2':6, '3':2, '4':4 };
+const MAP_PTZ_CAMERA_VIDEO_SOURCE_ID = { '2': 6, '3': 2, '4': 4 };
 
 // In RoomOS 11 there are multiple SpeakerTrack default behaviors to choose from on the navigator or
 // Touch10 device. Set ST_DEFAULT_BEHAVIOR to the one you want this macro to use from these choices:
@@ -125,7 +152,7 @@ const MAP_PTZ_CAMERA_VIDEO_SOURCE_ID = { '2':6, '3':2, '4':4 };
 // Closeup: The default framing mode is Closeup (speaker tracking). 
 // Current: The framing mode is kept unchanged when leaving a call. 
 // Frames: The default framing mode is Frames.
-const ST_DEFAULT_BEHAVIOR='Closeup'
+const ST_DEFAULT_BEHAVIOR = 'Closeup'
 
 // This next line hides the mid-call controls “Lock meeting” and “Record”.  The reason for this is so that the
 // “Camera Control” button can be seen.  If you prefer to have the mid-call controls showing, change the value of this from “Hidden” to “Auto”
@@ -156,7 +183,7 @@ const OVERVIEW_PRESET_ZONE = Z0;
 // OVERVIEW_DOUBLE_SOURCE_IDS specifies the source video array of two IDs to use when in overview mode if you set overviewShowDouble to true
 // it will display the two sources side by side on the main screen with the first value of the array on the
 // left and the second on the right.
-const OVERVIEW_DOUBLE_SOURCE_IDS = [2,1];
+const OVERVIEW_DOUBLE_SOURCE_IDS = [2, 1];
 
 /*
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -182,14 +209,14 @@ const VIDEO_SOURCE_SWITCH_WAIT_TIME = 500; // 500 ms
 /////////////////////////////////////////////////////////////////////////////////////////
 
 
-const AUX_CODEC_AUTH=encode(AUX_CODEC_USERNAME+':'+AUX_CODEC_PASSWORD); // DO NOT EDIT
+const AUX_CODEC_AUTH = encode(AUX_CODEC_USERNAME + ':' + AUX_CODEC_PASSWORD); // DO NOT EDIT
 
 // Microphone High/Low Thresholds
-const MICROPHONELOW  = 6;
+const MICROPHONELOW = 6;
 const MICROPHONEHIGH = 25;
 
-const minOS10Version='10.17.1.0';
-const minOS11Version='11.0.0.4';
+const minOS10Version = '10.17.1.0';
+const minOS11Version = '11.0.0.4';
 
 /*
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -210,50 +237,49 @@ const sleep = (timeout) => new Promise((resolve) => {
 
 
 async function validate_mappings() {
-    const timeout = 2000; // Milliseconds, equals 2 seconds
+  const timeout = 2000; // Milliseconds, equals 2 seconds
 
-    if (MICROPHONE_CONNECTORS.length != MAP_CAMERA_SOURCES.length) {
-        console.log('ERROR: There is a mismatch between the number of microphones defined and the number of camera sources mapped:');
-        console.log('Microphone connectors defined: ', MICROPHONE_CONNECTORS);
-        console.log('Map of camera sources: ', MAP_CAMERA_SOURCES);
-        while (true) {
-                console.log('Please stop this Camera Switcher Macro, correct the microphones/camera sources mismatch and re-start...');
-                await sleep(timeout);
-        }
-
+  if (MICROPHONE_CONNECTORS.length != MAP_CAMERA_SOURCES.length) {
+    console.log('ERROR: There is a mismatch between the number of microphones defined and the number of camera sources mapped:');
+    console.log('Microphone connectors defined: ', MICROPHONE_CONNECTORS);
+    console.log('Map of camera sources: ', MAP_CAMERA_SOURCES);
+    while (true) {
+      console.log('Please stop this Camera Switcher Macro, correct the microphones/camera sources mismatch and re-start...');
+      await sleep(timeout);
     }
 
-    if (MAP_CAMERA_SOURCES.indexOf(SP)!=-1) {
-        if  (MAP_CAMERA_SOURCES.indexOf(SP) != MAP_CAMERA_SOURCES.lastIndexOf(SP))
-        {
-            console.log('ERROR: There can only be one or zero SpeakerTrack (value 0) cameras sources defined in the map:');
-            console.log('Map of camera sources: ', MAP_CAMERA_SOURCES);
-            while (true) {
-                    console.log('Please stop this Camera Switcher Macro, make sure there is only 1 or 0 SpeakerTrack cameras configured and re-start...');
-                    await sleep(timeout);
-            }
-        }
+  }
+
+  if (MAP_CAMERA_SOURCES.indexOf(SP) != -1) {
+    if (MAP_CAMERA_SOURCES.indexOf(SP) != MAP_CAMERA_SOURCES.lastIndexOf(SP)) {
+      console.log('ERROR: There can only be one or zero SpeakerTrack (value 0) cameras sources defined in the map:');
+      console.log('Map of camera sources: ', MAP_CAMERA_SOURCES);
+      while (true) {
+        console.log('Please stop this Camera Switcher Macro, make sure there is only 1 or 0 SpeakerTrack cameras configured and re-start...');
+        await sleep(timeout);
+      }
     }
+  }
 }
 
 validate_mappings();
 
 // below we check for the existence of a SpeakerTrack camera configured for the codec
 // so we can safely issue SpeakerTrack related commands
-let has_SpeakerTrack= MAP_CAMERA_SOURCES.indexOf(SP) != -1 ||
-                        MAP_CAMERA_SOURCES.indexOf(V1) != -1;
+let has_SpeakerTrack = MAP_CAMERA_SOURCES.indexOf(SP) != -1 ||
+  MAP_CAMERA_SOURCES.indexOf(V1) != -1;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // VARIABLES
 /////////////////////////////////////////////////////////////////////////////////////////
-let AUX_CODEC={ enable: (AUX_CODEC_IP!='') , online: false, url: AUX_CODEC_IP, auth: AUX_CODEC_AUTH};
+let AUX_CODEC = { enable: (AUX_CODEC_IP != ''), online: false, url: AUX_CODEC_IP, auth: AUX_CODEC_AUTH };
 //Declare your object for GMM communication
 var auxCodec;
 
-let micArrays={};
+let micArrays = {};
 for (var i in MICROPHONE_CONNECTORS) {
-    micArrays[MICROPHONE_CONNECTORS[i].toString()]=[0,0,0,0];
+  micArrays[MICROPHONE_CONNECTORS[i].toString()] = [0, 0, 0, 0];
 }
 let lowWasRecalled = false;
 let lastActiveHighInput = 0;
@@ -264,59 +290,62 @@ let allowCameraSwitching = false;
 let allowNewSpeaker = true;
 let newSpeakerTimer = null;
 let manual_mode = true;
-let lastActivePTZCameraZoneObj=Z0;
-let lastActivePTZCameraZoneCamera='0';
+let lastActivePTZCameraZoneObj = Z0;
+let lastActivePTZCameraZoneCamera = '0';
 
-let perma_sbs=false; // set to true if you want to start with side by side view always
+let perma_sbs = false; // set to true if you want to start with side by side view always
 
-let micHandler= () => void 0;
+let micHandler = () => void 0;
 
-let usb_mode=false;
-let webrtc_mode=false;
+let usb_mode = false;
+let webrtc_mode = false;
 
-let isOSTen=false;
-let isOSEleven=false;
+let isOSTen = false;
+let isOSEleven = false;
+
+let presenterTrackConfigured = false;
+let presenterSuspendedAuto = false;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // UTILITIES
 /////////////////////////////////////////////////////////////////////////////////////////
 function encode(s) {
-    var c = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
+  var c = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
     o = [];
-    for (var i = 0, n = s.length; i < n;) {
-      var c1 = s.charCodeAt(i++),
+  for (var i = 0, n = s.length; i < n;) {
+    var c1 = s.charCodeAt(i++),
       c2 = s.charCodeAt(i++),
       c3 = s.charCodeAt(i++);
-      o.push(c.charAt(c1 >> 2));
-      o.push(c.charAt(((c1 & 3) << 4) | (c2 >> 4)));
-      o.push(c.charAt(i < n + 2 ? ((c2 & 15) << 2) | (c3 >> 6) : 64));
-      o.push(c.charAt(i < n + 1 ? c3 & 63 : 64));
-    }
+    o.push(c.charAt(c1 >> 2));
+    o.push(c.charAt(((c1 & 3) << 4) | (c2 >> 4)));
+    o.push(c.charAt(i < n + 2 ? ((c2 & 15) << 2) | (c3 >> 6) : 64));
+    o.push(c.charAt(i < n + 1 ? c3 & 63 : 64));
+  }
   return o.join("");
 }
 
 async function getPresetCamera(prID) {
-  const value =  await xapi.Command.Camera.Preset.Show({ PresetId: prID });
-  return(value.CameraId)
+  const value = await xapi.Command.Camera.Preset.Show({ PresetId: prID });
+  return (value.CameraId)
 }
 
 async function check4_Minimum_Version_Required(minimumOs) {
   const reg = /^\D*(?<MAJOR>\d*)\.(?<MINOR>\d*)\.(?<EXTRAVERSION>\d*)\.(?<BUILDID>\d*).*$/i;
-  const minOs = minimumOs; 
+  const minOs = minimumOs;
   const os = await xapi.Status.SystemUnit.Software.Version.get();
   console.log(os)
-  const x = (reg.exec(os)).groups; 
+  const x = (reg.exec(os)).groups;
   const y = (reg.exec(minOs)).groups;
-  if (parseInt(x.MAJOR) > parseInt(y.MAJOR)) return true; 
-  if (parseInt(x.MAJOR) < parseInt(y.MAJOR)) return false; 
-  if (parseInt(x.MINOR) > parseInt(y.MINOR)) return true; 
-  if (parseInt(x.MINOR) < parseInt(y.MINOR)) return false; 
-  if (parseInt(x.EXTRAVERSION) > parseInt(y.EXTRAVERSION)) return true; 
-  if (parseInt(x.EXTRAVERSION) < parseInt(y.EXTRAVERSION)) return false; 
-  if (parseInt(x.BUILDID) > parseInt(y.BUILDID)) return true; 
-  if (parseInt(x.BUILDID) < parseInt(y.BUILDID)) return false; 
+  if (parseInt(x.MAJOR) > parseInt(y.MAJOR)) return true;
+  if (parseInt(x.MAJOR) < parseInt(y.MAJOR)) return false;
+  if (parseInt(x.MINOR) > parseInt(y.MINOR)) return true;
+  if (parseInt(x.MINOR) < parseInt(y.MINOR)) return false;
+  if (parseInt(x.EXTRAVERSION) > parseInt(y.EXTRAVERSION)) return true;
+  if (parseInt(x.EXTRAVERSION) < parseInt(y.EXTRAVERSION)) return false;
+  if (parseInt(x.BUILDID) > parseInt(y.BUILDID)) return true;
+  if (parseInt(x.BUILDID) < parseInt(y.BUILDID)) return false;
   return false;
-} 
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // INITIALIZATION
@@ -325,37 +354,33 @@ async function check4_Minimum_Version_Required(minimumOs) {
 
 
 function evalFullScreen(value) {
-	if (value=='On') {
-		xapi.command('UserInterface Extensions Widget SetValue', {WidgetId: 'widget_FS_selfview', Value: 'on'});
-	}
-	else
-	{
-		xapi.command('UserInterface Extensions Widget SetValue', {WidgetId: 'widget_FS_selfview' , Value: 'off'});
-	}
+  if (value == 'On') {
+    xapi.command('UserInterface Extensions Widget SetValue', { WidgetId: 'widget_FS_selfview', Value: 'on' });
+  }
+  else {
+    xapi.command('UserInterface Extensions Widget SetValue', { WidgetId: 'widget_FS_selfview', Value: 'off' });
+  }
 }
 
 // evalFullScreenEvent is needed because we have to check when someone manually turns on full screen
 // when self view is already selected... it will eventually check FullScreen again, but that should be
 // harmless
-function evalFullScreenEvent(value)
-{
-	if (value=='On') {
-		xapi.Status.Video.Selfview.Mode.get().then(evalSelfView);
-	}
-	else
-	{
-		xapi.command('UserInterface Extensions Widget SetValue', {WidgetId: 'widget_FS_selfview', Value: 'off'});
-	}
+function evalFullScreenEvent(value) {
+  if (value == 'On') {
+    xapi.Status.Video.Selfview.Mode.get().then(evalSelfView);
+  }
+  else {
+    xapi.command('UserInterface Extensions Widget SetValue', { WidgetId: 'widget_FS_selfview', Value: 'off' });
+  }
 }
 
 function evalSelfView(value) {
-	if (value=='On') {
-		xapi.Status.Video.Selfview.FullscreenMode.get().then(evalFullScreen);
-	}
-	else
-	{
-		xapi.command('UserInterface Extensions Widget SetValue', {WidgetId: 'widget_FS_selfview', Value: 'off'});
-	}
+  if (value == 'On') {
+    xapi.Status.Video.Selfview.FullscreenMode.get().then(evalFullScreen);
+  }
+  else {
+    xapi.command('UserInterface Extensions Widget SetValue', { WidgetId: 'widget_FS_selfview', Value: 'off' });
+  }
 }
 
 async function init() {
@@ -368,110 +393,114 @@ async function init() {
   }
 
 
+  // check for presenterTrack being configured
+  let enabledGet = await xapi.Config.Cameras.PresenterTrack.Enabled.get()
+  presenterTrackConfigured = (enabledGet == 'True') ? true : false;
+
   // Stop any VuMeters that might have been left from a previous macro run with a different MICROPHONE_CONNECTORS constant
   // to prevent errors due to unhandled vuMeter events.
-  xapi.Command.Audio.VuMeter.StopAll({ });
+  xapi.Command.Audio.VuMeter.StopAll({});
 
   // register callback for processing manual mute setting on codec
   xapi.Status.Audio.Microphones.Mute.on((state) => {
-      console.log(`handleMicMuteResponse: ${state}`);
+    console.log(`handleMicMuteResponse: ${state}`);
 
-      if (state == 'On') {
-          stopSideBySideTimer();
-          setTimeout(handleMicMuteOn, 2000);
-      }
-      else if (state == 'Off') {
-            handleMicMuteOff();
-      }
+    if (state == 'On') {
+      stopSideBySideTimer();
+      setTimeout(handleMicMuteOn, 2000);
+    }
+    else if (state == 'Off') {
+      handleMicMuteOff();
+    }
   });
 
   // register event handlers for local events
   xapi.Status.Standby.State
-	.on(value => {
-					console.log(value);
-             		 if (value=="Off") handleWakeUp();
-             		 if (value=="Standby") handleShutDown();
-	});
-
-    // register handler for Widget actions
-    xapi.event.on('UserInterface Extensions Widget Action', (event) =>
-                            handleOverrideWidget(event));
-
-    // register handler for Call Successful
-    xapi.Event.CallSuccessful.on(async () => {
-      console.log("Starting new call timer...");
-      await startAutomation();
-      recallSideBySideMode();
-      startInitialCallTimer();
+    .on(value => {
+      console.log(value);
+      if (value == "Off") handleWakeUp();
+      if (value == "Standby") handleShutDown();
     });
 
-    // register handler for Call Disconnect
-    xapi.Event.CallDisconnect.on(async () => {
-        console.log("Turning off Self View....");
-        xapi.Command.Video.Selfview.Set({ Mode: 'off'});
-        webrtc_mode=false; // ending webrtc calls is being notified here now in RoomOS11
+  // register handler for Widget actions
+  xapi.event.on('UserInterface Extensions Widget Action', (event) =>
+    handleOverrideWidget(event));
+
+  // register handler for Call Successful
+  xapi.Event.CallSuccessful.on(async () => {
+    console.log("Starting new call timer...");
+    await startAutomation();
+    recallSideBySideMode();
+    startInitialCallTimer();
+  });
+
+  // register handler for Call Disconnect
+  xapi.Event.CallDisconnect.on(async () => {
+    console.log("Turning off Self View....");
+    xapi.Command.Video.Selfview.Set({ Mode: 'off' });
+    webrtc_mode = false; // ending webrtc calls is being notified here now in RoomOS11
+    stopAutomation();
+  });
+
+  // check RoomOS versions
+
+  isOSTen = await check4_Minimum_Version_Required(minOS10Version);
+  isOSEleven = await check4_Minimum_Version_Required(minOS11Version);
+
+  // register WebRTC Mode and HDMI Passhtorugh mode handlers if RoomOS 11
+  if (isOSEleven) {
+    xapi.Status.UserInterface.WebView.Type.on(async (value) => {
+      if (value === 'WebRTCMeeting') {
+        webrtc_mode = true;
+
+        console.log("Starting automation due to WebRTCMeeting event...");
+        startAutomation();
+        startInitialCallTimer();
+
+      } else {
+        webrtc_mode = false;
+        if (!usb_mode) {
+          console.log("Turning off Self View....");
+          xapi.Command.Video.Selfview.Set({ Mode: 'off' });
+          console.log("Stopping automation due to a non-WebRTCMeeting  event...");
+          stopAutomation();
+        }
+
+      }
+    });
+
+    xapi.Status.Video.Output.HDMI.Passthrough.Status.on(value => {
+      console.log(value)
+      if (value == 'Active') {
+        console.warn(`System is in Passthrough Active Mode`)
+        startAutomation();
+        usb_mode = true;
+      } else {
+        console.warn(`System is in Passthrough Inactive Mode`)
         stopAutomation();
+        usb_mode = false;
+      }
     });
+  }
 
-    // check RoomOS versions
+  //  set self-view toggle on custom panel depending on Codec status that might have been set manually
+  xapi.Status.Video.Selfview.Mode.get().then(evalSelfView);
 
-    isOSTen=await check4_Minimum_Version_Required(minOS10Version);
-    isOSEleven=await check4_Minimum_Version_Required(minOS11Version);
+  // register to receive events when someone manually turns on self-view
+  // so we can keep the custom toggle button in the right state
+  xapi.Status.Video.Selfview.Mode.on(evalSelfView);
 
-    // register WebRTC Mode and HDMI Passhtorugh mode handlers if RoomOS 11
-    if (isOSEleven) {
-        xapi.Status.UserInterface.WebView.Type.on(async(value) => {
-          if (value==='WebRTCMeeting') {
-            webrtc_mode=true;
+  // register to receive events when someone manually turns on full screen mode
+  // so we can keep the custom toggle button in the right state if also in self view
+  xapi.Status.Video.Selfview.FullscreenMode.on(evalFullScreenEvent);
 
-            console.log("Starting automation due to WebRTCMeeting event...");
-            startAutomation();
-            startInitialCallTimer();
+  // next, set Automatic mode toggle switch on custom panel off since the macro starts that way
+  xapi.command('UserInterface Extensions Widget SetValue', { WidgetId: 'widget_override', Value: 'off' });
 
-          } else {
-            webrtc_mode=false;
-            if (!usb_mode) {
-                console.log("Turning off Self View....");
-                xapi.Command.Video.Selfview.Set({ Mode: 'off'});
-                console.log("Stopping automation due to a non-WebRTCMeeting  event...");
-                stopAutomation();
-              }
+  // next, set side by side mode panel to whatever is configured initially
+  xapi.command('UserInterface Extensions Widget SetValue', { WidgetId: 'widget_sbs_control', Value: (perma_sbs) ? 'on' : 'off' });
 
-          }
-        });
 
-        xapi.Status.Video.Output.HDMI.Passthrough.Status.on(value => {
-          console.log(value)
-          if (value=='Active') {
-            console.warn(`System is in Passthrough Active Mode`)
-            startAutomation();
-            usb_mode= true;
-          } else {
-            console.warn(`System is in Passthrough Inactive Mode`)
-            stopAutomation();
-            usb_mode= false;
-          }
-        });
-    }
-
-    //  set self-view toggle on custom panel depending on Codec status that might have been set manually
-    xapi.Status.Video.Selfview.Mode.get().then(evalSelfView);
-
-    // register to receive events when someone manually turns on self-view
-    // so we can keep the custom toggle button in the right state
-    xapi.Status.Video.Selfview.Mode.on(evalSelfView);
-
-    // register to receive events when someone manually turns on full screen mode
-    // so we can keep the custom toggle button in the right state if also in self view
-    xapi.Status.Video.Selfview.FullscreenMode.on(evalFullScreenEvent);
-
-    // next, set Automatic mode toggle switch on custom panel off since the macro starts that way
-    xapi.command('UserInterface Extensions Widget SetValue', {WidgetId: 'widget_override', Value: 'off'});
-
-    // next, set side by side mode panel to whatever is configured initially
-    xapi.command('UserInterface Extensions Widget SetValue', {WidgetId: 'widget_sbs_control', Value: (perma_sbs) ? 'on' : 'off'});
-
-    
 
 }
 
@@ -482,73 +511,80 @@ async function init() {
 
 async function startAutomation() {
   console.log('startAutomation');
-   //setting overall manual mode to false
-   manual_mode = false;
-   allowCameraSwitching = true;
+  //setting overall manual mode to false
+  manual_mode = false;
+  allowCameraSwitching = true;
 
-   if (isOSEleven) {
-   try {
-    xapi.Config.Cameras.SpeakerTrack.DefaultBehavior.set(ST_DEFAULT_BEHAVIOR);
-    const webViewType = await xapi.Status.UserInterface.WebView.Type.get()
-    if (webViewType=='WebRTCMeeting') webrtc_mode=true;
-   } catch (e) {
-     console.log('Unable to read WebView Type.. assuming not in webrtc mode')
-   }
+  // presenterTrack cannot be on when we start automation
+  if (presenterTrackConfigured) {
+    xapi.Command.Cameras.PresenterTrack.Set({ Mode: 'Off' });
   }
 
-    // Always turn on SpeakerTrack when the Automation is started. It is also turned on when a call connects so that
-    // if it is manually turned off while outside of a call it goes back to the correct state
-   if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
+  if (isOSEleven) {
+    try {
+      xapi.Config.Cameras.SpeakerTrack.DefaultBehavior.set(ST_DEFAULT_BEHAVIOR);
+      const webViewType = await xapi.Status.UserInterface.WebView.Type.get()
+      if (webViewType == 'WebRTCMeeting') webrtc_mode = true;
+    } catch (e) {
+      console.log('Unable to read WebView Type.. assuming not in webrtc mode')
+    }
+  }
 
-   //registering vuMeter event handler
-   micHandler=xapi.event.on('Audio Input Connectors Microphone', (event) => {
+  // Always turn on SpeakerTrack when the Automation is started. It is also turned on when a call connects so that
+  // if it is manually turned off while outside of a call it goes back to the correct state
+  if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
+
+  //registering vuMeter event handler
+  micHandler = xapi.event.on('Audio Input Connectors Microphone', (event) => {
     //adding protection for mis-configured mics
-    if (typeof micArrays[event.id[0]]!='undefined') { 
-        micArrays[event.id[0]].pop();
-        micArrays[event.id[0]].push(event.VuMeter);
+    if (typeof micArrays[event.id[0]] != 'undefined') {
+      micArrays[event.id[0]].pop();
+      micArrays[event.id[0]].push(event.VuMeter);
 
-        // checking on manual_mode might be unnecessary because in manual mode,
-        // audio events should not be triggered
-        if (manual_mode==false)
-        {
-            // invoke main logic to check mic levels ans switch to correct camera input
-            checkMicLevelsToSwitchCamera();
-        }
+      // checking on manual_mode might be unnecessary because in manual mode,
+      // audio events should not be triggered
+      if (manual_mode == false) {
+        // invoke main logic to check mic levels ans switch to correct camera input
+        checkMicLevelsToSwitchCamera();
       }
-    });
+    }
+  });
   // start VuMeter monitoring
   console.log("Turning on VuMeter monitoring...")
   for (var i in MICROPHONE_CONNECTORS) {
     xapi.command('Audio VuMeter Start', {
-          ConnectorId: MICROPHONE_CONNECTORS[i],
-          ConnectorType: 'Microphone',
-          IntervalMs: 500,
-          Source: 'AfterAEC'
+      ConnectorId: MICROPHONE_CONNECTORS[i],
+      ConnectorType: 'Microphone',
+      IntervalMs: 500,
+      Source: 'AfterAEC'
     });
   }
   // set toggle button on custom panel to reflect that automation is turned on.
-  xapi.command('UserInterface Extensions Widget SetValue', {WidgetId: 'widget_override', Value: 'on'});
+  xapi.command('UserInterface Extensions Widget SetValue', { WidgetId: 'widget_override', Value: 'on' });
 }
 
-function stopAutomation() {
-         //setting overall manual mode to true
-         manual_mode = true;
-         stopSideBySideTimer();
-         stopNewSpeakerTimer();
-         stopInitialCallTimer();
-         lastActiveHighInput = 0; //TODO: check to see if this improves turning on/off the automation
-         lowWasRecalled = true; //TODO: check to see if this improves turning on/of the automation
-         console.log("Stopping all VuMeters...");
-         xapi.Command.Audio.VuMeter.StopAll({ });
-         //TODO: check to see if when we stop automation we really want to switch to connectorID 1
-         console.log("Switching to MainVideoSource connectorID 1 ...");
-         xapi.Command.Video.Input.SetMainVideoSource({ SourceId: 1});
-         // using proper way to de-register handlers
-         micHandler();
-         micHandler= () => void 0;
 
-         // set toggle button on custom panel to reflect that automation is turned off.
-         xapi.command('UserInterface Extensions Widget SetValue', {WidgetId: 'widget_override', Value: 'off'});
+function stopAutomation(reset_source = true) {
+  //setting overall manual mode to true
+  manual_mode = true;
+  stopSideBySideTimer();
+  stopNewSpeakerTimer();
+  stopInitialCallTimer();
+  lastActiveHighInput = 0; //TODO: check to see if this improves turning on/off the automation
+  lowWasRecalled = true; //TODO: check to see if this improves turning on/of the automation
+  console.log("Stopping all VuMeters...");
+  xapi.Command.Audio.VuMeter.StopAll({});
+  //TODO: check to see if when we stop automation we really want to switch to connectorID 1
+  if (reset_source) {
+    console.log("Switching to MainVideoSource connectorID 1 ...");
+    xapi.Command.Video.Input.SetMainVideoSource({ SourceId: 1 });
+  }
+  // using proper way to de-register handlers
+  micHandler();
+  micHandler = () => void 0;
+
+  // set toggle button on custom panel to reflect that automation is turned off.
+  xapi.command('UserInterface Extensions Widget SetValue', { WidgetId: 'widget_override', Value: 'off' });
 
 }
 
@@ -559,50 +595,50 @@ function stopAutomation() {
 function checkMicLevelsToSwitchCamera() {
   // make sure we've gotten enough samples from each mic in order to do averages
   if (allowCameraSwitching) {
-         // figure out which of the inputs has the highest average level then perform logic for that input *ONLY* if allowCameraSwitching is true
-          let array_key=largestMicValue();
-          let array=[];
-          array=micArrays[array_key];
-          // get the average level for the currently active input
-          let average = averageArray(array);
-          //get the input number as an int since it is passed as a string (since it is a key to a dict)
-          let input = parseInt(array_key);
-          // someone is speaking
-          if (average > MICROPHONEHIGH) {
-            // start timer to prevent Side-by-Side mode too quickly
-            restartSideBySideTimer();
-            if (input > 0) {
-              lowWasRecalled = false;
-              // no one was talking before
-              if (lastActiveHighInput === 0) {
-                makeCameraSwitch(input, average);
-              }
-              // the same person is talking
-              else if (lastActiveHighInput === input) {
-                restartNewSpeakerTimer();
-              }
-              // a different person is talking
-              else if (lastActiveHighInput !== input) {
-                if (allowNewSpeaker) {
-                  makeCameraSwitch(input, average);
-                }
-              }
-            }
+    // figure out which of the inputs has the highest average level then perform logic for that input *ONLY* if allowCameraSwitching is true
+    let array_key = largestMicValue();
+    let array = [];
+    array = micArrays[array_key];
+    // get the average level for the currently active input
+    let average = averageArray(array);
+    //get the input number as an int since it is passed as a string (since it is a key to a dict)
+    let input = parseInt(array_key);
+    // someone is speaking
+    if (average > MICROPHONEHIGH) {
+      // start timer to prevent Side-by-Side mode too quickly
+      restartSideBySideTimer();
+      if (input > 0) {
+        lowWasRecalled = false;
+        // no one was talking before
+        if (lastActiveHighInput === 0) {
+          makeCameraSwitch(input, average);
+        }
+        // the same person is talking
+        else if (lastActiveHighInput === input) {
+          restartNewSpeakerTimer();
+        }
+        // a different person is talking
+        else if (lastActiveHighInput !== input) {
+          if (allowNewSpeaker) {
+            makeCameraSwitch(input, average);
           }
-          // no one is speaking
-          else if (average < MICROPHONELOW) {
-            // only trigger if enough time has elapsed since someone spoke last
-            if (allowSideBySide) {
-              if (input > 0 && !lowWasRecalled) {
-                lastActiveHighInput = 0;
-                lowWasRecalled = true;
-                console.log("-------------------------------------------------");
-                console.log("Low Triggered");
-                console.log("-------------------------------------------------");
-                recallSideBySideMode();
-              }
-            }
-          }
+        }
+      }
+    }
+    // no one is speaking
+    else if (average < MICROPHONELOW) {
+      // only trigger if enough time has elapsed since someone spoke last
+      if (allowSideBySide) {
+        if (input > 0 && !lowWasRecalled) {
+          lastActiveHighInput = 0;
+          lowWasRecalled = true;
+          console.log("-------------------------------------------------");
+          console.log("Low Triggered");
+          console.log("-------------------------------------------------");
+          recallSideBySideMode();
+        }
+      }
+    }
 
   }
 }
@@ -616,48 +652,48 @@ async function makeCameraSwitch(input, average) {
 
   // first obtain the Map Camera Sources value that corresponds to the loudest microphone
   // we want to use for switching camera input
-  var selectedSource=MAP_CAMERA_SOURCES[MICROPHONE_CONNECTORS.indexOf(input)]
+  var selectedSource = MAP_CAMERA_SOURCES[MICROPHONE_CONNECTORS.indexOf(input)]
 
   if (!perma_sbs) {
-// We do not need to check for  has_SpeakerTrack below because we are implicitly
-// checking for that by evaluating typeof selectedSource
-  if (typeof selectedSource == 'number') {
-    if (selectedSource==SP) {
+    // We do not need to check for  has_SpeakerTrack below because we are implicitly
+    // checking for that by evaluating typeof selectedSource
+    if (typeof selectedSource == 'number') {
+      if (selectedSource == SP) {
         // if the active camera is a SpeakerTrack camera, just activate it, no need to set main video source to it
         console.log('Switching to SpeakerTrack camera');
         resumeSpeakerTrack();
         xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
-    }
-    else {
-          // the Video Input SetMainVideoSource does not work while Speakertrack is active
-          // so we need to turn it off in case the previous video input was from a source where
-          // SpeakerTrack is used.
-          //xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
-          pauseSpeakerTrack();
-           // Switch to the source that is speficied in the same index position in MAP_CAMERA_SOURCE_IDS
-          let sourceDict={ SourceID : '0'}
-          sourceDict["SourceID"]=selectedSource.toString();
-          console.log("Switching to input with SetMainVideoSource with dict: ", sourceDict  )
-          xapi.command('Video Input SetMainVideoSource', sourceDict).catch(handleError);
-          if ((MAP_CAMERA_SOURCES.indexOf(SP)==-1) && (selectedSource==MAIN_CODEC_QUADCAM_SOURCE_ID) ) {
-              // if the codec is using a QuadCam (no SpeakerTrack camera allowed) then
-              // turn back on SpeakerTrack function on the codec in case it was turned off in side by side mode.
-              //xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
-              resumeSpeakerTrack();
-          }
+      }
+      else {
+        // the Video Input SetMainVideoSource does not work while Speakertrack is active
+        // so we need to turn it off in case the previous video input was from a source where
+        // SpeakerTrack is used.
+        //xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
+        pauseSpeakerTrack();
+        // Switch to the source that is speficied in the same index position in MAP_CAMERA_SOURCE_IDS
+        let sourceDict = { SourceID: '0' }
+        sourceDict["SourceID"] = selectedSource.toString();
+        console.log("Switching to input with SetMainVideoSource with dict: ", sourceDict)
+        xapi.command('Video Input SetMainVideoSource', sourceDict).catch(handleError);
+        if ((MAP_CAMERA_SOURCES.indexOf(SP) == -1) && (selectedSource == MAIN_CODEC_QUADCAM_SOURCE_ID)) {
+          // if the codec is using a QuadCam (no SpeakerTrack camera allowed) then
+          // turn back on SpeakerTrack function on the codec in case it was turned off in side by side mode.
+          //xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
+          resumeSpeakerTrack();
+        }
       }
       // if we are not switching to a camera zone with PTZ cameras, we need to re-set the
       // lastActivePTZCameraZone Object to the "non-camera" value of Z0 as when we started the macro
       // because the decision tree on switching or not from a camera that was already pointed at someone
       // relies on the last video input source having been a PTZ camera video zone
-      lastActivePTZCameraZoneObj=Z0;
-      lastActivePTZCameraZoneCamera='0';
+      lastActivePTZCameraZoneObj = Z0;
+      lastActivePTZCameraZoneCamera = '0';
     }
-   else if (typeof selectedSource == 'object') {
-        switchToVideoZone(selectedSource);
-   }
-  // send required messages to auxiliary codec that also turns on speakertrack over there
-  await sendIntercodecMessage(AUX_CODEC, 'automatic_mode');
+    else if (typeof selectedSource == 'object') {
+      switchToVideoZone(selectedSource);
+    }
+    // send required messages to auxiliary codec that also turns on speakertrack over there
+    await sendIntercodecMessage(AUX_CODEC, 'automatic_mode');
 
   } else {
     // if "permanent" side by side is selected, just switch to that
@@ -670,79 +706,78 @@ async function makeCameraSwitch(input, average) {
 }
 
 async function switchToVideoZone(selectedSource) {
-           // The mic input mapped to a PTZ camera is to be selected, first check that camera zone was already being used
-            if (lastActivePTZCameraZoneObj==selectedSource) {
-                // same camera zone as before, so we do not want to change the inUse value of that zone object (keep it inUse=true)
-                console.log("Still using same camera zone, no need to Activate camera preset.")
-            }
-            else
-            {
-                var selectedSourcePrimaryCamID='';
-                var selectedSourceSecondaryCamID='';
-                var thePresetId=0;
-                var thePresetVideoSource=0;
-                // Since this is a camera zone,  first check if primary or secondary to be selected based on the possibility
-                // that the previous zone was using the same physical camera than the new zone selected.
-                selectedSourcePrimaryCamID = await getPresetCamera(selectedSource['primary']);
-                if (selectedSourcePrimaryCamID!=lastActivePTZCameraZoneCamera) {
-                    thePresetId=selectedSource['primary'];
-                    thePresetVideoSource=MAP_PTZ_CAMERA_VIDEO_SOURCE_ID[selectedSourcePrimaryCamID]
-                    lastActivePTZCameraZoneObj=selectedSource;
-                    lastActivePTZCameraZoneCamera=selectedSourcePrimaryCamID;
-                }
-                else {
-                    selectedSourceSecondaryCamID = await getPresetCamera(selectedSource['secondary']);
-                    thePresetId=selectedSource['secondary'];
-                    thePresetVideoSource=MAP_PTZ_CAMERA_VIDEO_SOURCE_ID[selectedSourceSecondaryCamID]
-                    lastActivePTZCameraZoneObj=selectedSource;
-                    lastActivePTZCameraZoneCamera=selectedSourceSecondaryCamID;
+  // The mic input mapped to a PTZ camera is to be selected, first check that camera zone was already being used
+  if (lastActivePTZCameraZoneObj == selectedSource) {
+    // same camera zone as before, so we do not want to change the inUse value of that zone object (keep it inUse=true)
+    console.log("Still using same camera zone, no need to Activate camera preset.")
+  }
+  else {
+    var selectedSourcePrimaryCamID = '';
+    var selectedSourceSecondaryCamID = '';
+    var thePresetId = 0;
+    var thePresetVideoSource = 0;
+    // Since this is a camera zone,  first check if primary or secondary to be selected based on the possibility
+    // that the previous zone was using the same physical camera than the new zone selected.
+    selectedSourcePrimaryCamID = await getPresetCamera(selectedSource['primary']);
+    if (selectedSourcePrimaryCamID != lastActivePTZCameraZoneCamera) {
+      thePresetId = selectedSource['primary'];
+      thePresetVideoSource = MAP_PTZ_CAMERA_VIDEO_SOURCE_ID[selectedSourcePrimaryCamID]
+      lastActivePTZCameraZoneObj = selectedSource;
+      lastActivePTZCameraZoneCamera = selectedSourcePrimaryCamID;
+    }
+    else {
+      selectedSourceSecondaryCamID = await getPresetCamera(selectedSource['secondary']);
+      thePresetId = selectedSource['secondary'];
+      thePresetVideoSource = MAP_PTZ_CAMERA_VIDEO_SOURCE_ID[selectedSourceSecondaryCamID]
+      lastActivePTZCameraZoneObj = selectedSource;
+      lastActivePTZCameraZoneCamera = selectedSourceSecondaryCamID;
 
-                }
-                // instruct the codec to now use the correct camera preset
-                console.log('Switching to preset ID: '+thePresetId+' which uses camera: '+lastActivePTZCameraZoneCamera);
-                xapi.Command.Camera.Preset.Activate({ PresetId: thePresetId });
+    }
+    // instruct the codec to now use the correct camera preset
+    console.log('Switching to preset ID: ' + thePresetId + ' which uses camera: ' + lastActivePTZCameraZoneCamera);
+    xapi.Command.Camera.Preset.Activate({ PresetId: thePresetId });
 
-                // now set main video source to where the camera is connected
-                setTimeout(function() {
-                            setMainVideoSource(thePresetVideoSource);
-                            }, VIDEO_SOURCE_SWITCH_WAIT_TIME);
+    // now set main video source to where the camera is connected
+    setTimeout(function () {
+      setMainVideoSource(thePresetVideoSource);
+    }, VIDEO_SOURCE_SWITCH_WAIT_TIME);
 
-            }
+  }
 
 }
 
 function setMainVideoSource(thePresetVideoSource) {
-    // the Video Input SetMainVideoSource does not work while Speakertrack is active
-    // so we need to turn it off in case the previous video input was from a source where
-    // SpeakerTrack is used.
-    //if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
-    if (has_SpeakerTrack) pauseSpeakerTrack();
+  // the Video Input SetMainVideoSource does not work while Speakertrack is active
+  // so we need to turn it off in case the previous video input was from a source where
+  // SpeakerTrack is used.
+  //if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
+  if (has_SpeakerTrack) pauseSpeakerTrack();
 
-    let sourceDict={ SourceID : '0'}
-    sourceDict["SourceID"]=thePresetVideoSource.toString();
-    console.log("In setMainVideoSource() switching to input with SetMainVideoSource with dict: ", sourceDict  )
-    xapi.command('Video Input SetMainVideoSource', sourceDict).catch(handleError);
+  let sourceDict = { SourceID: '0' }
+  sourceDict["SourceID"] = thePresetVideoSource.toString();
+  console.log("In setMainVideoSource() switching to input with SetMainVideoSource with dict: ", sourceDict)
+  xapi.command('Video Input SetMainVideoSource', sourceDict).catch(handleError);
 }
 
 function largestMicValue() {
   // figure out which of the inputs has the highest average level and return the corresponding key
- let currentMaxValue=0;
- let currentMaxKey='';
- let theAverage=0;
- for (var i in MICROPHONE_CONNECTORS){
-    theAverage=averageArray(micArrays[MICROPHONE_CONNECTORS[i].toString()]);
-    if (theAverage>=currentMaxValue) {
-        currentMaxKey=MICROPHONE_CONNECTORS[i].toString();
-        currentMaxValue=theAverage;
+  let currentMaxValue = 0;
+  let currentMaxKey = '';
+  let theAverage = 0;
+  for (var i in MICROPHONE_CONNECTORS) {
+    theAverage = averageArray(micArrays[MICROPHONE_CONNECTORS[i].toString()]);
+    if (theAverage >= currentMaxValue) {
+      currentMaxKey = MICROPHONE_CONNECTORS[i].toString();
+      currentMaxValue = theAverage;
     }
- }
- return currentMaxKey;
+  }
+  return currentMaxKey;
 }
 
 function averageArray(arrayIn) {
   let sum = 0;
-  for(var i = 0; i < arrayIn.length; i++) {
-    sum = sum + parseInt( arrayIn[i], 10 );
+  for (var i = 0; i < arrayIn.length; i++) {
+    sum = sum + parseInt(arrayIn[i], 10);
   }
   let avg = (sum / arrayIn.length) * arrayIn.length;
   return avg;
@@ -752,43 +787,43 @@ async function recallSideBySideMode() {
   //first we need to clear out the lastActivePTZCameraZone vars since we want to make sure
   // that after SideBySideMode is called, the next call to switchToVideoZone() does actually force
   // a switch
-  lastActivePTZCameraZoneObj=Z0;
-  lastActivePTZCameraZoneCamera='0';
+  lastActivePTZCameraZoneObj = Z0;
+  lastActivePTZCameraZoneCamera = '0';
   if (overviewShowDouble && !webrtc_mode) { //WebRTC mode does not support composing yet even in RoomOS11
-        let connectorDict={ ConnectorId : [0,0]};
-        connectorDict["ConnectorId"]=OVERVIEW_DOUBLE_SOURCE_IDS;
-        console.log("Trying to use this for connector dict in recallSideBySideMode(): ", connectorDict  )
-        xapi.command('Video Input SetMainVideoSource', connectorDict).catch(handleError);
-        //if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
-        if (has_SpeakerTrack) pauseSpeakerTrack();
+    let connectorDict = { ConnectorId: [0, 0] };
+    connectorDict["ConnectorId"] = OVERVIEW_DOUBLE_SOURCE_IDS;
+    console.log("Trying to use this for connector dict in recallSideBySideMode(): ", connectorDict)
+    xapi.command('Video Input SetMainVideoSource', connectorDict).catch(handleError);
+    //if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
+    if (has_SpeakerTrack) pauseSpeakerTrack();
 
-        xapi.command('Camera Preset Activate', { PresetId: 30 }).catch(handleError);
+    xapi.command('Camera Preset Activate', { PresetId: 30 }).catch(handleError);
 
-        const payload = { EditMatrixOutput: { sources: connectorDict["ConnectorId"] } };
+    const payload = { EditMatrixOutput: { sources: connectorDict["ConnectorId"] } };
 
-        setTimeout(function(){
-          //Let USB Macro know we are composing
-          localCallout.command(payload).post()
-        }, 250) //250ms delay to allow the main source to resolve first
+    setTimeout(function () {
+      //Let USB Macro know we are composing
+      localCallout.command(payload).post()
+    }, 250) //250ms delay to allow the main source to resolve first
+  }
+  else {
+    // Check for OVERVIEW_PRESET_ZONE. If set to default Z0, just SetMainVideoSource
+    if (OVERVIEW_PRESET_ZONE == Z0) {
+      let sourceDict = { SourceID: '0' };
+      sourceDict["SourceID"] = OVERVIEW_SINGLE_SOURCE_ID.toString();
+      console.log("Trying to use this for source dict in recallSideBySideMode(): ", sourceDict)
+      xapi.command('Video Input SetMainVideoSource', sourceDict).catch(handleError);
+      //if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
+      if (has_SpeakerTrack) pauseSpeakerTrack();
     }
     else {
-        // Check for OVERVIEW_PRESET_ZONE. If set to default Z0, just SetMainVideoSource
-        if (OVERVIEW_PRESET_ZONE == Z0) {
-            let sourceDict={ SourceID : '0'};
-            sourceDict["SourceID"]=OVERVIEW_SINGLE_SOURCE_ID.toString();
-            console.log("Trying to use this for source dict in recallSideBySideMode(): ", sourceDict  )
-            xapi.command('Video Input SetMainVideoSource', sourceDict).catch(handleError);
-            //if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
-            if (has_SpeakerTrack) pauseSpeakerTrack();
-        }
-        else {
-                // If OVERVIEW_PRESET_ZONE is defined as something other than Z0, switch to that
-                console.log('Recall side by side mode switching to preset OVERVIEW_PRESET_ZONE...');
-                //if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
-                if (has_SpeakerTrack) pauseSpeakerTrack();
-                switchToVideoZone(OVERVIEW_PRESET_ZONE);
-        }
+      // If OVERVIEW_PRESET_ZONE is defined as something other than Z0, switch to that
+      console.log('Recall side by side mode switching to preset OVERVIEW_PRESET_ZONE...');
+      //if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
+      if (has_SpeakerTrack) pauseSpeakerTrack();
+      switchToVideoZone(OVERVIEW_PRESET_ZONE);
     }
+  }
   // send required messages to other codecs
   await sendIntercodecMessage(AUX_CODEC, 'side_by_side');
   lastActiveHighInput = 0;
@@ -799,35 +834,35 @@ async function recallSideBySideMode() {
 async function permaSideBySideMode(selectedSource) {
 
   if (overviewShowDouble && !webrtc_mode) { //WebRTC mode does not support composing yet even in RoomOS11
-        let connectorDict={ ConnectorId : [0,0]};
-        connectorDict["ConnectorId"]=OVERVIEW_DOUBLE_SOURCE_IDS;
-        console.log("Trying to use this for connector dict in permaSideBySideMode(): ", connectorDict  )
-        xapi.command('Video Input SetMainVideoSource', connectorDict).catch(handleError);
+    let connectorDict = { ConnectorId: [0, 0] };
+    connectorDict["ConnectorId"] = OVERVIEW_DOUBLE_SOURCE_IDS;
+    console.log("Trying to use this for connector dict in permaSideBySideMode(): ", connectorDict)
+    xapi.command('Video Input SetMainVideoSource', connectorDict).catch(handleError);
 
-        if (MAIN_CODEC_QUADCAM_SOURCE_ID==selectedSource) {
-          await sendIntercodecMessage(AUX_CODEC, 'side_by_side');
-          //if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
-          resumeSpeakerTrack(); 
+    if (MAIN_CODEC_QUADCAM_SOURCE_ID == selectedSource) {
+      await sendIntercodecMessage(AUX_CODEC, 'side_by_side');
+      //if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
+      resumeSpeakerTrack();
 
-        } else {
-          await sendIntercodecMessage(AUX_CODEC, 'automatic_mode');
-          //if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
-          if (has_SpeakerTrack) pauseSpeakerTrack();
-          xapi.command('Camera Preset Activate', { PresetId: 30 }).catch(handleError);        
-        }
-
-        const payload = { EditMatrixOutput: { sources: connectorDict["ConnectorId"] } };
-
-        setTimeout(function(){
-          //Let USB Macro know we are composing
-          localCallout.command(payload).post()
-        }, 250) //250ms delay to allow the main source to resolve first
+    } else {
+      await sendIntercodecMessage(AUX_CODEC, 'automatic_mode');
+      //if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Deactivate').catch(handleError);
+      if (has_SpeakerTrack) pauseSpeakerTrack();
+      xapi.command('Camera Preset Activate', { PresetId: 30 }).catch(handleError);
     }
-    else {
-        console.log('Cannot set permanent side by side mode without overviewShowDouble set to true or in WebRTC mode... ');
-        perma_sbs=false;
-        xapi.command('UserInterface Extensions Widget SetValue', {WidgetId: 'widget_sbs_control', Value: (perma_sbs) ? 'on' : 'off'});
-    }
+
+    const payload = { EditMatrixOutput: { sources: connectorDict["ConnectorId"] } };
+
+    setTimeout(function () {
+      //Let USB Macro know we are composing
+      localCallout.command(payload).post()
+    }, 250) //250ms delay to allow the main source to resolve first
+  }
+  else {
+    console.log('Cannot set permanent side by side mode without overviewShowDouble set to true or in WebRTC mode... ');
+    perma_sbs = false;
+    xapi.command('UserInterface Extensions Widget SetValue', { WidgetId: 'widget_sbs_control', Value: (perma_sbs) ? 'on' : 'off' });
+  }
 
 }
 
@@ -835,60 +870,53 @@ async function permaSideBySideMode(selectedSource) {
 // TOUCH 10 UI FUNCTION HANDLERS
 /////////////////////////////////////////////////////////////////////////////////////////
 
-function handleOverrideWidget(event)
-{
-         if (event.WidgetId === 'widget_override')
-         {
-            console.log("Camera Control button selected.....")
-            if (event.Value === 'off') {
+function handleOverrideWidget(event) {
+  if (event.WidgetId === 'widget_override') {
+    console.log("Camera Control button selected.....")
+    if (event.Value === 'off') {
 
-                    console.log("Camera Control is set to Manual...");
-                    console.log("Stopping automation...")
-                    stopAutomation();
-                }
-               else
-               {
+      console.log("Camera Control is set to Manual...");
+      console.log("Stopping automation...")
+      stopAutomation();
+    }
+    else {
 
-                  // start VuMeter monitoring
-                  console.log("Camera Control is set to Automatic...");
-                  console.log("Starting automation...")
-                  startAutomation();
-               }
+      // start VuMeter monitoring
+      console.log("Camera Control is set to Automatic...");
+      console.log("Starting automation...")
+      startAutomation();
+    }
 
-         }
-         
-         if (event.WidgetId === 'widget_sbs_control')
-         {
-            console.log("Side by side control selected.....")
-            if (event.Value === 'off') {
-                  console.log("Side by side control is set to overview...");
-                  perma_sbs=false;
-                }
-               else
-               {
-                  console.log("Side by side control is set to always...");
-                  perma_sbs=true;
-                }
-            // trigger a cameraSwitch evaluation
-            lastActiveHighInput = 0;
-         }
+  }
 
-         if (event.WidgetId === 'widget_FS_selfview')
-         {
-            console.log("Selfview button selected.....")
-            if (event.Value === 'off') {
-                    console.log("Selfview is set to Off...");
-                    console.log("turning off self-view...")
-                    xapi.Command.Video.Selfview.Set({ FullscreenMode: 'Off', Mode: 'Off', OnMonitorRole: 'First'});
-                }
-               else
-               {
-                  console.log("Selfview is set to On...");
-                  console.log("turning on self-view...")
-                  // TODO: determine if turning off self-view should also turn off fullscreenmode
-                  xapi.Command.Video.Selfview.Set({ FullscreenMode: 'On', Mode: 'On', OnMonitorRole: 'First'});
-               }
-         }
+  if (event.WidgetId === 'widget_sbs_control') {
+    console.log("Side by side control selected.....")
+    if (event.Value === 'off') {
+      console.log("Side by side control is set to overview...");
+      perma_sbs = false;
+    }
+    else {
+      console.log("Side by side control is set to always...");
+      perma_sbs = true;
+    }
+    // trigger a cameraSwitch evaluation
+    lastActiveHighInput = 0;
+  }
+
+  if (event.WidgetId === 'widget_FS_selfview') {
+    console.log("Selfview button selected.....")
+    if (event.Value === 'off') {
+      console.log("Selfview is set to Off...");
+      console.log("turning off self-view...")
+      xapi.Command.Video.Selfview.Set({ FullscreenMode: 'Off', Mode: 'Off', OnMonitorRole: 'First' });
+    }
+    else {
+      console.log("Selfview is set to On...");
+      console.log("turning on self-view...")
+      // TODO: determine if turning off self-view should also turn off fullscreenmode
+      xapi.Command.Video.Selfview.Set({ FullscreenMode: 'On', Mode: 'On', OnMonitorRole: 'First' });
+    }
+  }
 }
 
 
@@ -906,70 +934,70 @@ function handleError(error) {
 /////////////////////////////////////////////////////////////////////////////////////////
 
 async function updateUSBModeConfig() {
-  var object = { AlterUSBConfig: { config: 'matrix_Camera_Mode', value: true } } 
-  await localCallout.command(object).post() 
+  var object = { AlterUSBConfig: { config: 'matrix_Camera_Mode', value: true } }
+  await localCallout.command(object).post()
 }
 
 
 GMM.Event.Receiver.on(event => {
   const usb_mode_reg = /USB_Mode_Version_[0-9]*.*/gm
-  if ((typeof event)!='string')
-  if (event.Source.Id=='localhost') {
-          // we are evaluating a local event, first check to see if from the USB Mode macro
-          if (usb_mode_reg.test(event.App)) {
-            if (event.Type == 'Error') {
-              console.error(event)
-            } else {
-                switch (event.Value) {
-                  case 'Initialized':
-                    console.warn(`USB mode initialized...`)
-                    updateUSBModeConfig();
-                    break;
-                  case 'EnteringWebexMode': case 'Entering_Default_Mode': case 'EnteringDefaultMode':
-                    console.warn(`You are entering Webex Mode`)
-                    //Run code here when Default Mode starts to configure
-                    break;
-                  case 'WebexModeStarted': case 'DefaultModeStarted':
-                    console.warn(`System is in Default Mode`)
-                    stopAutomation();
-                    usb_mode= false;
-                    // always tell the other codec when your are in or out of a call
-                    //otherCodec.status('CALL_DISCONNECTED').post();
+  if ((typeof event) != 'string')
+    if (event.Source.Id == 'localhost') {
+      // we are evaluating a local event, first check to see if from the USB Mode macro
+      if (usb_mode_reg.test(event.App)) {
+        if (event.Type == 'Error') {
+          console.error(event)
+        } else {
+          switch (event.Value) {
+            case 'Initialized':
+              console.warn(`USB mode initialized...`)
+              updateUSBModeConfig();
+              break;
+            case 'EnteringWebexMode': case 'Entering_Default_Mode': case 'EnteringDefaultMode':
+              console.warn(`You are entering Webex Mode`)
+              //Run code here when Default Mode starts to configure
+              break;
+            case 'WebexModeStarted': case 'DefaultModeStarted':
+              console.warn(`System is in Default Mode`)
+              stopAutomation();
+              usb_mode = false;
+              // always tell the other codec when your are in or out of a call
+              //otherCodec.status('CALL_DISCONNECTED').post();
 
-                    break;
-                  case 'enteringUSBMode':
-                    console.warn(`You are entering USB Mode`)
-                    //Run code here when USB Mode starts to configure
-                    break;
-                  case 'USBModeStarted':
-                    console.warn(`System is in Default Mode`)
-                    startAutomation();
-                    usb_mode= true;
-                    // always tell the other codec when your are in or out of a call
-                    //otherCodec.status('CALL_CONNECTED').post();
+              break;
+            case 'enteringUSBMode':
+              console.warn(`You are entering USB Mode`)
+              //Run code here when USB Mode starts to configure
+              break;
+            case 'USBModeStarted':
+              console.warn(`System is in Default Mode`)
+              startAutomation();
+              usb_mode = true;
+              // always tell the other codec when your are in or out of a call
+              //otherCodec.status('CALL_CONNECTED').post();
 
-                    break;
-                  default:
-                    break;
-                }
-            }
-          }
-          else {
-            console.debug({
-              Message: `Received Message from ${event.App} and was not processed`
-            })
+              break;
+            default:
+              break;
           }
         }
-        else
-        switch (event.Value) {
-          case "VTC-1_OK":
-            handleCodecOnline(AUX_CODEC);
-            break;
-          default:
-            break;
-        }
+      }
+      else {
+        console.debug({
+          Message: `Received Message from ${event.App} and was not processed`
+        })
+      }
+    }
+    else
+      switch (event.Value) {
+        case "VTC-1_OK":
+          handleCodecOnline(AUX_CODEC);
+          break;
+        default:
+          break;
+      }
 
-      })
+})
 
 
 
@@ -977,14 +1005,14 @@ GMM.Event.Receiver.on(event => {
 // INTER-CODEC COMMUNICATION
 /////////////////////////////////////////////////////////////////////////////////////////
 
-async function sendIntercodecMessage(codec, message) { 
+async function sendIntercodecMessage(codec, message) {
   if (codec.enable) {
     console.log(`sendIntercodecMessage: codec = ${codec.url} | message = ${message}`);
-    if (auxCodec!='') auxCodec.status(message).queue().catch(e=>{
+    if (auxCodec != '') auxCodec.status(message).queue().catch(e => {
       console.log('Error sending message');
       alertFailedIntercodecComm("Error connecting to codec for second camera, please contact the Administrator");
     });
- }
+  }
 }
 
 GMM.Event.Queue.on(report => {
@@ -997,10 +1025,10 @@ GMM.Event.Queue.on(report => {
 });
 
 function alertFailedIntercodecComm(message) {
-        xapi.command("UserInterface Message Alert Display", {
-        Text: message
-      , Duration: 10
-    }).catch((error) => { console.error(error); });
+  xapi.command("UserInterface Message Alert Display", {
+    Text: message
+    , Duration: 10
+  }).catch((error) => { console.error(error); });
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -1031,17 +1059,17 @@ function handleMicMuteOff() {
 async function handleMacroStatus() {
   console.log('handleMacroStatus');
   if (AUX_CODEC.enable) {
-      // reset tracker of responses from AUX codec
-      AUX_CODEC.online = false;
-      // send required messages to AUX codec
-      await sendIntercodecMessage(AUX_CODEC, 'VTC-1_status');
+    // reset tracker of responses from AUX codec
+    AUX_CODEC.online = false;
+    // send required messages to AUX codec
+    await sendIntercodecMessage(AUX_CODEC, 'VTC-1_status');
   }
 }
 
 function handleCodecOnline(codec) {
-    if (codec.enable) {
-      console.log(`handleCodecOnline: codec = ${codec.url}`);
-      codec.online = true;
+  if (codec.enable) {
+    console.log(`handleCodecOnline: codec = ${codec.url}`);
+    codec.online = true;
   }
 }
 
@@ -1053,7 +1081,7 @@ async function handleWakeUp() {
   await sendIntercodecMessage(AUX_CODEC, 'wake_up');
   // check the satus of the macros running on the AUX codec and store it in AUX_CODEC.online
   // in case we need to check it in some other function
-  setTimeout(handleMacroStatus,2000);
+  setTimeout(handleMacroStatus, 2000);
 }
 
 async function handleShutDown() {
@@ -1102,7 +1130,7 @@ function startInitialCallTimer() {
 
 function onInitialCallTimerExpired() {
   console.log('onInitialCallTimerExpired');
-  InitialCallTimer=null;
+  InitialCallTimer = null;
   if (!manual_mode) {
     allowCameraSwitching = true;
     //if (has_SpeakerTrack) xapi.command('Cameras SpeakerTrack Activate').catch(handleError);
@@ -1158,13 +1186,31 @@ function pauseSpeakerTrack() {
 // if the Speakertrack Camera becomes available after FW upgrade, we must re-init so
 // we register that action as an event handler
 xapi.Status.Cameras.SpeakerTrack.Availability
-    .on((value) => {
-        console.log("Event received for SpeakerTrack Availability: ",value)
-        if (value=="Available"){
-         stopAutomation();
-         init();
-        }
-    });
+  .on((value) => {
+    console.log("Event received for SpeakerTrack Availability: ", value)
+    if (value == "Available") {
+      stopAutomation();
+      init();
+    }
+  });
 
+
+// register to keep track of when PresenterTrack is active or not
+xapi.Status.Cameras.PresenterTrack.Status.on(value => {
+  console.log('Received PT status as: ', value)
+  if (value === 'Follow' || value === 'Persistent') {
+    if (!manual_mode) {
+      stopAutomation(false);
+      presenterSuspendedAuto = true;
+    }
+  }
+  else {
+    if (presenterSuspendedAuto) {
+      startAutomation();
+      presenterSuspendedAuto = false;
+    }
+  }
+
+});
 
 init();
