@@ -13,9 +13,9 @@ or implied.
 *
 * Repository: gve_devnet_webex_devices_executive_room_voice_activated_switching_macro
 * Macro file: main_codec_macro
-* Version: 2.1.1
-* Released: May 11, 2023
-* Latest RoomOS version tested: 11.5.0.24 (Beta)
+* Version: 2.1.2
+* Released: May 23, 2023
+* Latest RoomOS version tested: 11.4
 *
 * Macro Author:      	Gerardo Chaves
 *                    	Technical Solutions Architect
@@ -1196,12 +1196,20 @@ xapi.Status.Cameras.SpeakerTrack.Availability
 
 
 // register to keep track of when PresenterTrack is active or not
-xapi.Status.Cameras.PresenterTrack.Status.on(value => {
+xapi.Status.Cameras.PresenterTrack.Status.on(async value => {
   console.log('Received PT status as: ', value)
   if (value === 'Follow' || value === 'Persistent') {
     if (!manual_mode) {
-      stopAutomation(false);
+
+      await stopAutomation(false);
       presenterSuspendedAuto = true;
+      if (allowSideBySide) {
+        allowSideBySide = false;
+        let presenterSource = await xapi.Config.Cameras.PresenterTrack.Connector.get();
+        let connectorDict = { ConnectorId: presenterSource };
+        await xapi.Command.Video.Input.SetMainVideoSource(connectorDict);
+        await xapi.Command.Cameras.PresenterTrack.Set({ Mode: value });
+      }
     }
   }
   else {
@@ -1210,7 +1218,6 @@ xapi.Status.Cameras.PresenterTrack.Status.on(value => {
       presenterSuspendedAuto = false;
     }
   }
-
 });
 
 init();

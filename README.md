@@ -57,6 +57,10 @@ It features the following enhancements:
 - Added versioning in the macro comments (currently at version 2.1.1)
 - Added event handling for PresenterTrack so automation with automatically turn off and then resume if you invoke presenterTrack during a call. No need to do it manually.
 
+5/23/23 Updates for version 2.1.2:
+
+- Corrected event handling for PresenterTrack so automation with automatically turn off and then resume if you invoke presenterTrack during a call even if in side-by-side mode.
+
 ## Contacts
 
 - Gerardo Chaves (gchaves@cisco.com)

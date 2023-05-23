@@ -1,6 +1,6 @@
 /*
 CISCO BOARDROOM VERSION 2.0 - AUXILIARY CODEC MACRO
-Copyright (c) 2021 Cisco and/or its affiliates.
+Copyright (c) 2023 Cisco and/or its affiliates.
 This software is licensed to you under the terms of the Cisco Sample
 Code License, Version 1.1 (the "License"). You may obtain a copy of the
 License at
@@ -14,9 +14,9 @@ or implied.
 *
 * Repository: gve_devnet_webex_devices_executive_room_voice_activated_switching_macro
 * Macro file: aux_codec_macro
-* Version: 2.1.1
-* Released: May 11, 2023
-* Latest RoomOS version tested: 11.5.0.24 (Beta)
+* Version: 2.1.2
+* Released: May 23, 2023
+* Latest RoomOS version tested: 11.4
 *
 * Macro Author:      	Gerardo Chaves
 *                    	Technical Solutions Architect
