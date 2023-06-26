@@ -64,6 +64,7 @@ It features the following enhancements:
 ## Contacts
 
 - Gerardo Chaves (gchaves@cisco.com)
+- Enrico Conedera
 
 ## Solution Components
 
@@ -103,7 +104,9 @@ You can find technical drawings and connection diagrams for the most common scen
 Notice that for the dual codec scenario, the camera input 2 on the Primary (Main) Codec comes from
 Output 1 on the Auxiliary codec since we are just using that codec to pass along the video from the QuadCam.
 Also notice that all microphones are connected to the Primary (Main) Codec since the macro running
-there is the one making all of the decisions on which camara to activate depending on audio activity.
+there is the one making all of the decisions on which camara to activate depending on audio activity. Only analog microphones connected to input connectors 1-8 are supported.
+
+WARNING: Make sure the Main an Auxiliary codecs are NOT in the same Workspace in Control Hub. If they are, the Auxiliary codec will try to join the same call as the Main codec and that will interfere with the overall functionality of this macro.
 
 After the codecs, cameras and microphones are correctly connected do the following:
 
