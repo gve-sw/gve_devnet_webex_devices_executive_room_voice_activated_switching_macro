@@ -14,6 +14,14 @@ It features the following enhancements:
 - Support for using with only one main codec
 - Support for re-initializing the macro after a camera firmware update
 
+NOTE: There is a newer variant of this macro that will continue to be enhanced moving forward:
+https://github.com/gve-sw/gve_devnet_webex_devices_executive_room_multi_aux_switching_macro
+
+It supports multiple Auxiliary codecs and therefore more types of rooms setups since you can now have more than two QuadCams or even Room Bars in a room working as one system. In addition to supporting all scendarios described in this macro, it also has some newer features like:
+
+- PresenterTrack Auto-QA mode
+- Showing the top N speakers in a composition.
+
 11/7/22 Updates:
 
 - Support for USB Mode V3 Beta macro
